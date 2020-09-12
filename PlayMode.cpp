@@ -127,6 +127,12 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = true;
 			return true;
 		}
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false) {
+			jump.downs += 2;
+			if (jump.downs > 30)
+				jump.downs = 30;
+			jump.pressed = true;
+		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_LEFT) {
 			left.pressed = false;
@@ -141,6 +147,15 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = false;
 			return true;
 		}
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false) {
+			jump.pressed = false;
+			jump.ystart = player_at.y;
+			jump.xstart = player_at.x;
+			jump.time = 0;
+			jump.speed = jump.downs;
+			jump.is_jumping = true;
+			return true;
+		}
 	}
 
 	return false;
@@ -153,12 +168,24 @@ void PlayMode::update(float elapsed) {
 	background_fade += elapsed / 10.0f;
 	background_fade -= std::floor(background_fade);
 
-	constexpr float PlayerSpeed = 30.0f;
+	constexpr float PlayerSpeed = 10.0f;
 	if (left.pressed) player_at.x -= PlayerSpeed * elapsed;
 	if (right.pressed) player_at.x += PlayerSpeed * elapsed;
 	if (down.pressed) player_at.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player_at.y += PlayerSpeed * elapsed;
 
+	if (jump.downs > 0 && !jump.pressed) {
+		jump.downs -= elapsed * 10;
+		if (jump.downs < 0) jump.downs = 0.0f;
+		jump.time += elapsed * 10;
+		float temp_y = jump.ystart + jump.speed * jump.time - 4.9f * jump.time * jump.time;
+		if (temp_y < jump.ystart) {
+			temp_y = jump.ystart;
+			jump.is_jumping = false;
+		}
+		else player_at.x = jump.xstart + jump.speed/ 2 * jump.time;
+		player_at.y = temp_y;
+	}                   
 	//reset button press counters:
 	left.downs = 0;
 	right.downs = 0;
@@ -203,7 +230,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		ppu.sprites[i].y = int32_t(0.5f * PPU466::ScreenHeight + std::sin( 2.0f * M_PI * amt * 3.0f + 0.01f * player_at.y) * 0.4f * PPU466::ScreenWidth);
 		ppu.sprites[i].index = 32;
 		ppu.sprites[i].attributes = 6;
-		if (i % 2) ppu.sprites[i].attributes |= 0x80; //'behind' bit
+		ppu.sprites[i].attributes |= 0x80; //'behind' bit
 	}
 
 	//--- actually draw ---

@@ -23,6 +23,15 @@ struct PlayMode : Mode {
 		uint8_t pressed = 0;
 	} left, right, down, up;
 
+	struct JumpState {
+		float downs = 0.0f;
+		uint8_t pressed = 0;
+		float time = 0.0f;
+		float ystart = 0.0f;
+		float xstart = 0.0f;
+		float speed = 0.0f;
+		bool is_jumping = false;
+	} jump;
 	//some weird background animation:
 	float background_fade = 0.0f;
 

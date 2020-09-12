@@ -45,7 +45,7 @@ struct PPU466 {
 	// for a "true NES" experience, you should set:
 	//   color 0 to fully transparent
 	//   and color 1-3 to fully opaque.
-
+	static_assert(sizeof(Palette) == 16, "Palette is packed");
 	//Palette Table:
 	// The PPU stores 8 palettes for use when drawing tiles:
 	std::array< Palette, 8 > palette_table;
@@ -141,3 +141,14 @@ struct PPU466 {
 	std::array< Sprite, 64 > sprites;
 
 };
+/*
+vector<Tile> tile;
+vector<Pallette> pal;
+vector<Charcater> chars;
+
+struct Character {
+	vector<int> tileids;
+	vector<int> palids;
+	width;
+	height;
+};*/
