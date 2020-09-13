@@ -13,7 +13,7 @@
 
 /*
  * from https://stackoverflow.com/questions/34580472/alternative-to-ssize-t-on-posix-unconformant-systems
- * to hack a ssize_t
+ * to hack a ssize_t for Windows
  */
 #include <limits.h>
 #include <stddef.h>
@@ -295,7 +295,7 @@ void parse(const std::string& png_dir_name) {
         AssetInfo info;
         info.width = size[0];
         info.height = size[1];
-        info.palette_index = pal_idx;
+        info.palette_index = (uint8_t) pal_idx;
 
         std::vector<std::vector<glm::u8vec4>> small_png_datas = split_png_data(png_data, info.width, info.height);
 
@@ -309,7 +309,7 @@ void parse(const std::string& png_dir_name) {
                 assert(tiles.size() <= MAX_TOTAL_TILES);
                 tile_idx = (int)(tiles.size() - 1);
             }
-            info.tile_indices.push_back(tile_idx);
+            info.tile_indices.push_back((uint8_t)tile_idx);
         }
         asset_infos.push_back(info);
 //        debug_reconstruct_png(info, png_dir_name, asset_name);
