@@ -69,6 +69,7 @@ struct StoredAssetInfo {
     uint32_t height;
 };
 
+void read_asset_info_chunk(std::istream & from, std::vector<AssetInfo> * infos_p);
 
 
 #endif //INC_15_466_F20_BASE1_ASSET_CONVERTER_H

@@ -11,6 +11,38 @@
 #include <algorithm>
 #include <fstream>
 
+/*
+ * from https://stackoverflow.com/questions/34580472/alternative-to-ssize-t-on-posix-unconformant-systems
+ * to hack a ssize_t for Windows
+ */
+#include <limits.h>
+#include <stddef.h>
+#include <inttypes.h>
+#include <stdint.h>
+
+#if SIZE_MAX == UINT_MAX
+typedef int ssize_t;        /* common 32 bit case */
+#define SSIZE_MIN  INT_MIN
+#define SSIZE_MAX  INT_MAX
+#elif SIZE_MAX == ULONG_MAX
+typedef long ssize_t;       /* linux 64 bits */
+#define SSIZE_MIN  LONG_MIN
+#define SSIZE_MAX  LONG_MAX
+#elif SIZE_MAX == ULLONG_MAX
+typedef long long ssize_t;  /* windows 64 bits */
+#define SSIZE_MIN  LLONG_MIN
+#define SSIZE_MAX  LLONG_MAX
+#elif SIZE_MAX == USHRT_MAX
+typedef short ssize_t;      /* is this even possible? */
+#define SSIZE_MIN  SHRT_MIN
+#define SSIZE_MAX  SHRT_MAX
+#elif SIZE_MAX == UINTMAX_MAX
+typedef uintmax_t ssize_t;  /* last resort, chux suggestion */
+#define SSIZE_MIN  INTMAX_MIN
+#define SSIZE_MAX  INTMAX_MAX
+#else
+#error platform has exotic SIZE_MAX
+#endif
 
 /* Hard code the order of assets we read */
 static const std::vector<std::string> asset_names = {
@@ -134,7 +166,7 @@ PPU466::Palette get_palette(const std::vector<glm::u8vec4>& data) {
 
     // note it is possible that the size of colors < 4, fill with (0,0,0,0)
     PPU466::Palette res;
-    for(int i=0; i < PALETTE_SIZE; i++) {
+    for(size_t i=0; i < PALETTE_SIZE; i++) {
         if(i < colors.size()) {
             res[i] = colors[i];
         } else {
@@ -159,7 +191,7 @@ PPU466::Tile get_tile(const std::vector<glm::u8vec4>& data, const PPU466::Palett
         for (int j = 0; j < TILE_WIDTH; j ++) {
             // pixel at (j, i)
             glm::u8vec4 color = data[i * TILE_WIDTH + j];
-            auto idx = std::find(palette.begin(), palette.end(), color) - palette.begin();
+            auto idx = (size_t)(std::find(palette.begin(), palette.end(), color) - palette.begin());
 
             assert(idx < palette.size());
             tile.bit0[i] |= ((idx & 1) << j);
@@ -202,8 +234,8 @@ std::vector<std::vector<glm::u8vec4>> split_png_data(const std::vector<glm::u8ve
  *
  * @return idx if found, -1 otherwise
  */
-int search_tile(const PPU466::Tile& target_tile) {
-    for(int i = 0; i < tiles.size(); i++) {
+ssize_t search_tile(const PPU466::Tile& target_tile) {
+    for(size_t i = 0; i < tiles.size(); i++) {
         if (target_tile.bit0 == tiles[i].bit0 && target_tile.bit1 == tiles[i].bit1) {
             return i;
         }
@@ -216,8 +248,8 @@ int search_tile(const PPU466::Tile& target_tile) {
  *
  * @return idx if found, -1 otherwise
  */
-int search_palette(const PPU466::Palette target_palette) {
-    for(int i = 0; i < palettes.size(); i++) {
+ssize_t search_palette(const PPU466::Palette target_palette) {
+    for(size_t i = 0; i < palettes.size(); i++) {
         // check if target_palette and palettes[i] is the same:
         bool is_same = true;
         for (int j=0; j < PALETTE_SIZE; j++) {
@@ -249,12 +281,12 @@ void parse(const std::string& png_dir_name) {
 
         // Construct palette per png (we only allow 4 bit color in a png even if it contains multiple 8*8 tile)
         PPU466::Palette new_palette = get_palette(png_data);
-        int pal_idx =search_palette(new_palette);
+        ssize_t pal_idx = search_palette(new_palette);
         if(pal_idx < 0) {
             //find a new palettes
             palettes.push_back(new_palette);
             assert(palettes.size() <= MAX_TOTAL_PALETTES);
-            pal_idx = (int) (palettes.size() - 1);
+            pal_idx = palettes.size() - 1;
         } else {
             // use existing palette to draw
             new_palette = palettes[pal_idx];
@@ -263,21 +295,21 @@ void parse(const std::string& png_dir_name) {
         AssetInfo info;
         info.width = size[0];
         info.height = size[1];
-        info.palette_index = pal_idx;
+        info.palette_index = (uint8_t) pal_idx;
 
         std::vector<std::vector<glm::u8vec4>> small_png_datas = split_png_data(png_data, info.width, info.height);
 
         for (auto& small_data: small_png_datas) {
             // construct tile
             PPU466::Tile new_tile = get_tile(small_data, new_palette);
-            int tile_idx = search_tile(new_tile);
+            ssize_t tile_idx = search_tile(new_tile);
             if(tile_idx < 0) {
                 // find a new tile
                 tiles.push_back(new_tile);
                 assert(tiles.size() <= MAX_TOTAL_TILES);
                 tile_idx = (int)(tiles.size() - 1);
             }
-            info.tile_indices.push_back(tile_idx);
+            info.tile_indices.push_back((uint8_t)tile_idx);
         }
         asset_infos.push_back(info);
 //        debug_reconstruct_png(info, png_dir_name, asset_name);
@@ -374,20 +406,20 @@ int main(int argc, char**argv) {
 
     // debug: check if is the same
     assert(tiles.size() == converted_tiles.size());
-    for (int i=0; i<tiles.size(); i++) {
+    for (size_t i=0; i<tiles.size(); i++) {
         assert(tiles[i].bit0 == converted_tiles[i].bit0);
         assert(tiles[i].bit1 == converted_tiles[i].bit1);
     }
     std::cout<<"Tiles check pass!\n";
 
     assert(palettes.size() == converted_palettes.size());
-    for (int i=0; i<palettes.size(); i++) {
+    for (size_t i=0; i<palettes.size(); i++) {
         assert(palettes[i] == converted_palettes[i]);
     }
     std::cout<<"Palette check pass!\n";
 
     assert(converted_asset_infos.size() == asset_infos.size());
-    for(int i=0; i<asset_infos.size(); i++) {
+    for(size_t i=0; i<asset_infos.size(); i++) {
         assert(asset_infos[i].tile_indices == converted_asset_infos[i].tile_indices);
         assert(asset_infos[i].palette_index == converted_asset_infos[i].palette_index);
         assert(asset_infos[i].width == converted_asset_infos[i].width);
