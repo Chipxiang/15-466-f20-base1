@@ -92,6 +92,7 @@ MainFromObjects game : $(GAME_NAMES:S=$(SUFOBJ)) ;
 CONVERTER_NAMES =
 	asset_converter
 	load_save_png
+	data_path
 	;
 
 LOCATE_TARGET = objs ; #put objects in 'objs' directory
