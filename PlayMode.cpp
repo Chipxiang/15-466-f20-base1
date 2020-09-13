@@ -28,9 +28,29 @@ PlayMode::PlayMode() {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
 
-	player.size.x = asset_infos[Character].width;
-	player.size.y = asset_infos[Character].height;
+	player.size.x = asset_infos[Player_id].width;
+	player.size.y = asset_infos[Player_id].height;
 
+	ppu.tile_table[100].bit0 = {
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+	};
+	ppu.tile_table[100].bit1 = {
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+	};
 	//TODO:
 	// you *must* use an asset pipeline of some sort to generate tiles.
 	// don't hardcode them like this!
@@ -40,7 +60,7 @@ PlayMode::PlayMode() {
 
 	//Also, *don't* use these tiles in your game:
 
-	{ //use tiles 0-16 as some weird dot pattern thing:
+	/*{ //use tiles 0-16 as some weird dot pattern thing:
 		std::array< uint8_t, 8*8 > distance;
 		for (uint32_t y = 0; y < 8; ++y) {
 			for (uint32_t x = 0; x < 8; ++x) {
@@ -123,7 +143,7 @@ PlayMode::PlayMode() {
 		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
 		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
 	};
-
+	*/
 }
 
 PlayMode::~PlayMode() {
@@ -176,8 +196,8 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		}
 		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed >= min_jump_speed) {
 			jump.pressed = false;
-			jump.ystart = player_at.y;
-			jump.xstart = player_at.x;
+			jump.ystart = player.pos.y;
+			jump.xstart = player.pos.x;
 			jump.time = 0;
 			jump.is_jumping = true;
 			return true;
@@ -195,38 +215,40 @@ void PlayMode::update(float elapsed) {
 	background_fade -= std::floor(background_fade);
 
 	constexpr float PlayerSpeed = 10.0f;
-	if (left.pressed) player_at.x -= PlayerSpeed * elapsed;
-	if (right.pressed) player_at.x += PlayerSpeed * elapsed;
-	if (down.pressed) player_at.y -= PlayerSpeed * elapsed;
-	if (up.pressed) player_at.y += PlayerSpeed * elapsed;
+	if (left.pressed) player.pos.x -= PlayerSpeed * elapsed;
+	if (right.pressed) player.pos.x += PlayerSpeed * elapsed;
+	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
+	if (up.pressed) player.pos.y += PlayerSpeed * elapsed;
 
 	if (jump.speed > 0 && !jump.pressed) {
 		jump.time += elapsed * 10;
 		float temp_y = jump.ystart + jump.speed * jump.time - gravity_constant * jump.time * jump.time;
-		player_at.x = jump.xstart + jump.speed / 2 * jump.time;
+		player.pos.x = jump.xstart + jump.speed / 2 * jump.time;
 		// death
 		if (temp_y < 0) {
 			temp_y = 0;
 			jump.is_jumping = false;
 			jump.speed = 0.0f;
-			std::cout << player_at.x << "," << temp_y << std::endl;
+			std::cout << player.pos.x << "," << temp_y << std::endl;
 		}
 		// platform
-		for (uint32_t i = 1; i < 64; i++)
-		{
-			if (ppu.sprites[i].y < 240 && player_at.x > ppu.sprites[i].x - 7 && player_at.x < ppu.sprites[i].x + 7 &&
+		for (uint32_t i = (asset_infos[Player_id].width / 8) * (asset_infos[Player_id].height / 8); i < 63; i++)
+		{			
+			if (ppu.sprites[i].y < 240 && 
+				player.pos.x > ppu.sprites[i].x - player.size.x && player.pos.x < ppu.sprites[i].x + 8 &&
 				temp_y < ppu.sprites[i].y + 8) {
+				std::cout << i << "," << (int) ppu.sprites[i].y << std::endl;
 				temp_y = ppu.sprites[i].y + 8.0f;
 				jump.is_jumping = false;
 				jump.speed = 0.0f;
-				std::cout << player_at.x << "," << temp_y << std::endl;
+				std::cout << player.pos.x << "," << temp_y << std::endl;
 				break;
 			}
 		}
-		player_at.y = temp_y;
+		player.pos.y = temp_y;
 	}
-	if (player_at.x > 256)
-		player_at.x -= 256;
+	if (player.pos.x > 256)
+		player.pos.x -= 256;
 	//reset button press counters:
 	left.downs = 0;
 	right.downs = 0;
@@ -239,9 +261,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	//background color will be some hsv-like fade:
 	ppu.background_color = glm::u8vec4(
-		std::min(255,std::max(0,int32_t(255 * 0.5f * (0.5f + std::sin( 2.0f * M_PI * (background_fade + 0.0f / 3.0f) ) ) ))),
-		std::min(255,std::max(0,int32_t(255 * 0.5f * (0.5f + std::sin( 2.0f * M_PI * (background_fade + 1.0f / 3.0f) ) ) ))),
-		std::min(255,std::max(0,int32_t(255 * 0.5f * (0.5f + std::sin( 2.0f * M_PI * (background_fade + 2.0f / 3.0f) ) ) ))),
+		0,0,0,
 		0xff
 	);
 
@@ -250,51 +270,53 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	for (uint32_t y = 0; y < PPU466::BackgroundHeight; ++y) {
 		for (uint32_t x = 0; x < PPU466::BackgroundWidth; ++x) {
 			//TODO: make weird plasma thing
-			ppu.background[x+PPU466::BackgroundWidth*y] = ((x+y)%16);
+			ppu.background[x+PPU466::BackgroundWidth*y] = 100;
 		}
 	}
 
 	//background scroll:
-	ppu.background_position.x = int32_t(-0.5f * player_at.x);
-	ppu.background_position.y = int32_t(-0.5f * player_at.y);
+	ppu.background_position.x = int32_t(-0.5f * player.pos.x);
+	ppu.background_position.y = int32_t(-0.5f * player.pos.y);
 
-	//player sprite:
-	ppu.sprites[0].x = int32_t(player_at.x);
-	ppu.sprites[0].y = int32_t(player_at.y);
-	ppu.sprites[0].index = 32;
-	ppu.sprites[0].attributes = 7;
-
-	ppu.sprites[1].x = int32_t(64);
-	ppu.sprites[1].y = int32_t(8);
-	ppu.sprites[1].index = 32;
-	ppu.sprites[1].attributes = 6;
-
-	ppu.sprites[2].x = int32_t(72);
-	ppu.sprites[2].y = int32_t(8);
-	ppu.sprites[2].index = 32;
-	ppu.sprites[2].attributes = 6;
-
-	ppu.sprites[3].x = int32_t(80);
-	ppu.sprites[3].y = int32_t(8);
-	ppu.sprites[3].index = 32;
-	ppu.sprites[3].attributes = 6;
-
-	ppu.sprites[4].x = int32_t(88);
-	ppu.sprites[4].y = int32_t(8);
-	ppu.sprites[4].index = 32;
-	ppu.sprites[4].attributes = 6;
 	//some other misc sprites:
-	for (uint32_t i = 5; i < 63; ++i) {
+	for (uint32_t i = 0; i < 64; ++i) {
 		ppu.sprites[i].x = 0;
-		ppu.sprites[i].y = 250;
+		ppu.sprites[i].y = 240;
 		/*float amt = (i + 2.0f * background_fade) / 62.0f;
-		ppu.sprites[i].x = int32_t(0.5f * PPU466::ScreenWidth + std::cos( 2.0f * M_PI * amt * 5.0f + 0.01f * player_at.x) * 0.4f * PPU466::ScreenWidth);
-		ppu.sprites[i].y = int32_t(0.5f * PPU466::ScreenHeight + std::sin( 2.0f * M_PI * amt * 3.0f + 0.01f * player_at.y) * 0.4f * PPU466::ScreenWidth);*/
+		ppu.sprites[i].x = int32_t(0.5f * PPU466::ScreenWidth + std::cos( 2.0f * M_PI * amt * 5.0f + 0.01f * player.pos.x) * 0.4f * PPU466::ScreenWidth);
+		ppu.sprites[i].y = int32_t(0.5f * PPU466::ScreenHeight + std::sin( 2.0f * M_PI * amt * 3.0f + 0.01f * player.pos.y) * 0.4f * PPU466::ScreenWidth);*/
 		ppu.sprites[i].index = 32;
 		ppu.sprites[i].attributes = 6;
 		//ppu.sprites[i].attributes |= 0x80; //'behind' bit
 	}
 
+	//player sprite:
+	uint32_t nrows = asset_infos[Player_id].height / 8;
+	uint32_t ncols = asset_infos[Player_id].width / 8;
+	uint32_t count = 0;
+	for (uint32_t i = 0; i < nrows; i++) {
+		for (uint32_t j = 0; j < ncols; j++) {
+			ppu.sprites[count].x = int32_t(player.pos.x + j * 8);
+			ppu.sprites[count].y = int32_t(player.pos.y + i * 8);
+			ppu.sprites[count].index = asset_infos[Player_id].tile_indices[count];
+			ppu.sprites[count].attributes = asset_infos[Player_id].palette_index;
+			count++;
+		}
+	}	
+	ppu.sprites[8].x = 64;
+	ppu.sprites[8].y = 8;
+	ppu.sprites[8].index = asset_infos[Brick_id].tile_indices[0];
+	ppu.sprites[8].attributes = asset_infos[Brick_id].palette_index;
+
+	ppu.sprites[9].x = 72;
+	ppu.sprites[9].y = 8;
+	ppu.sprites[9].index = asset_infos[Brick_id].tile_indices[0];
+	ppu.sprites[9].attributes = asset_infos[Brick_id].palette_index;
+
+	ppu.sprites[10].x = 80;
+	ppu.sprites[10].y = 8;
+	ppu.sprites[10].index = asset_infos[Brick_id].tile_indices[0];
+	ppu.sprites[10].attributes = asset_infos[Brick_id].palette_index;
 	//--- actually draw ---
 	ppu.draw(drawable_size);
 }

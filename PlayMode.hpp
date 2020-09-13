@@ -30,7 +30,7 @@ struct PlayMode : Mode {
 	//----- game state -----
 	enum AssetIndex
 	{
-		Character, Brick
+		Player_id, Brick_id
 	} asset_idx;
 	//input tracking:
 	struct Button {
@@ -38,7 +38,7 @@ struct PlayMode : Mode {
 		uint8_t pressed = 0;
 	} left, right, down, up;
 
-	static const int max_jump_speed = 30;
+	static const int max_jump_speed = 40;
 	static const int min_jump_speed = 8;
 	static const int unit_jump_speed = 4;
 	static const int gravity_constant = 5;
