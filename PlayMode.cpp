@@ -1,5 +1,4 @@
 #include "PlayMode.hpp"
-
 //for the GL_ERRORS() macro:
 #include "gl_errors.hpp"
 
@@ -28,6 +27,10 @@ PlayMode::PlayMode() {
 	for (uint32_t i = 0; i < converted_palettes.size(); i++) {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
+
+	player.size.x = asset_infos[Character].width;
+	player.size.y = asset_infos[Character].height;
+
 	//TODO:
 	// you *must* use an asset pipeline of some sort to generate tiles.
 	// don't hardcode them like this!

@@ -1,15 +1,17 @@
 #include "PPU466.hpp"
 #include "Mode.hpp"
 #include "asset_converter.hpp"
+#include "data_path.hpp"
+#include "read_write_chunk.hpp"
 #include <glm/glm.hpp>
-
+#include <fstream>
 #include <vector>
 #include <deque>
 
 struct PlayMode : Mode {
 	PlayMode();
 	virtual ~PlayMode();
-
+	
 	//functions called by main loop:
 	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
 	virtual void update(float elapsed) override;
@@ -26,7 +28,10 @@ struct PlayMode : Mode {
 
 
 	//----- game state -----
-
+	enum AssetIndex
+	{
+		Character, Brick
+	} asset_idx;
 	//input tracking:
 	struct Button {
 		uint8_t downs = 0;
@@ -49,9 +54,13 @@ struct PlayMode : Mode {
 	//some weird background animation:
 	float background_fade = 0.0f;
 
-	//player position:
+	//player information:
+	struct PlayerInfo {
+		glm::vec2 pos = glm::vec2(0.0f, 8.0f);
+		glm::vec2 size = glm::vec2(8.0f, 8.0f);
+	} player;
 	glm::vec2 player_at = glm::vec2(0.0f, 8.0f);
-
+	
 	//----- drawing handled by PPU466 -----
 
 	PPU466 ppu;

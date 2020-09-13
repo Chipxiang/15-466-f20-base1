@@ -79,6 +79,8 @@ GAME_NAMES =
 	Mode
 	GL
 	Load
+	asset_converter
+	data_path
 	;
 
 LOCATE_TARGET = objs ; #put objects in 'objs' directory
