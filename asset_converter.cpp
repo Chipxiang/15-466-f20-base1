@@ -134,7 +134,7 @@ PPU466::Palette get_palette(const std::vector<glm::u8vec4>& data) {
 
     // note it is possible that the size of colors < 4, fill with (0,0,0,0)
     PPU466::Palette res;
-    for(int i=0; i < PALETTE_SIZE; i++) {
+    for(size_t i=0; i < PALETTE_SIZE; i++) {
         if(i < colors.size()) {
             res[i] = colors[i];
         } else {
@@ -159,7 +159,7 @@ PPU466::Tile get_tile(const std::vector<glm::u8vec4>& data, const PPU466::Palett
         for (int j = 0; j < TILE_WIDTH; j ++) {
             // pixel at (j, i)
             glm::u8vec4 color = data[i * TILE_WIDTH + j];
-            auto idx = std::find(palette.begin(), palette.end(), color) - palette.begin();
+            auto idx = (size_t)(std::find(palette.begin(), palette.end(), color) - palette.begin());
 
             assert(idx < palette.size());
             tile.bit0[i] |= ((idx & 1) << j);
@@ -203,7 +203,7 @@ std::vector<std::vector<glm::u8vec4>> split_png_data(const std::vector<glm::u8ve
  * @return idx if found, -1 otherwise
  */
 int search_tile(const PPU466::Tile& target_tile) {
-    for(int i = 0; i < tiles.size(); i++) {
+    for(size_t i = 0; i < tiles.size(); i++) {
         if (target_tile.bit0 == tiles[i].bit0 && target_tile.bit1 == tiles[i].bit1) {
             return i;
         }
@@ -217,7 +217,7 @@ int search_tile(const PPU466::Tile& target_tile) {
  * @return idx if found, -1 otherwise
  */
 int search_palette(const PPU466::Palette target_palette) {
-    for(int i = 0; i < palettes.size(); i++) {
+    for(size_t i = 0; i < palettes.size(); i++) {
         // check if target_palette and palettes[i] is the same:
         bool is_same = true;
         for (int j=0; j < PALETTE_SIZE; j++) {
@@ -374,20 +374,20 @@ int main(int argc, char**argv) {
 
     // debug: check if is the same
     assert(tiles.size() == converted_tiles.size());
-    for (int i=0; i<tiles.size(); i++) {
+    for (size_t i=0; i<tiles.size(); i++) {
         assert(tiles[i].bit0 == converted_tiles[i].bit0);
         assert(tiles[i].bit1 == converted_tiles[i].bit1);
     }
     std::cout<<"Tiles check pass!\n";
 
     assert(palettes.size() == converted_palettes.size());
-    for (int i=0; i<palettes.size(); i++) {
+    for (size_t i=0; i<palettes.size(); i++) {
         assert(palettes[i] == converted_palettes[i]);
     }
     std::cout<<"Palette check pass!\n";
 
     assert(converted_asset_infos.size() == asset_infos.size());
-    for(int i=0; i<asset_infos.size(); i++) {
+    for(size_t i=0; i<asset_infos.size(); i++) {
         assert(asset_infos[i].tile_indices == converted_asset_infos[i].tile_indices);
         assert(asset_infos[i].palette_index == converted_asset_infos[i].palette_index);
         assert(asset_infos[i].width == converted_asset_infos[i].width);
