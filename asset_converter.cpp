@@ -202,7 +202,7 @@ std::vector<std::vector<glm::u8vec4>> split_png_data(const std::vector<glm::u8ve
  *
  * @return idx if found, -1 otherwise
  */
-int search_tile(const PPU466::Tile& target_tile) {
+ssize_t search_tile(const PPU466::Tile& target_tile) {
     for(size_t i = 0; i < tiles.size(); i++) {
         if (target_tile.bit0 == tiles[i].bit0 && target_tile.bit1 == tiles[i].bit1) {
             return i;
@@ -216,7 +216,7 @@ int search_tile(const PPU466::Tile& target_tile) {
  *
  * @return idx if found, -1 otherwise
  */
-int search_palette(const PPU466::Palette target_palette) {
+ssize_t search_palette(const PPU466::Palette target_palette) {
     for(size_t i = 0; i < palettes.size(); i++) {
         // check if target_palette and palettes[i] is the same:
         bool is_same = true;
@@ -249,12 +249,12 @@ void parse(const std::string& png_dir_name) {
 
         // Construct palette per png (we only allow 4 bit color in a png even if it contains multiple 8*8 tile)
         PPU466::Palette new_palette = get_palette(png_data);
-        int pal_idx =search_palette(new_palette);
+        ssize_t pal_idx = search_palette(new_palette);
         if(pal_idx < 0) {
             //find a new palettes
             palettes.push_back(new_palette);
             assert(palettes.size() <= MAX_TOTAL_PALETTES);
-            pal_idx = (int) (palettes.size() - 1);
+            pal_idx = palettes.size() - 1;
         } else {
             // use existing palette to draw
             new_palette = palettes[pal_idx];
@@ -270,7 +270,7 @@ void parse(const std::string& png_dir_name) {
         for (auto& small_data: small_png_datas) {
             // construct tile
             PPU466::Tile new_tile = get_tile(small_data, new_palette);
-            int tile_idx = search_tile(new_tile);
+            ssize_t tile_idx = search_tile(new_tile);
             if(tile_idx < 0) {
                 // find a new tile
                 tiles.push_back(new_tile);
