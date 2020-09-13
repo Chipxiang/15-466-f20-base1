@@ -9,6 +9,25 @@
 #include <random>
 
 PlayMode::PlayMode() {
+	// read tiles
+	std::ifstream source_tile_file(data_path(Converter::TILE_CHUNK_FILE));
+	read_chunk(source_tile_file, Converter::TILE_MAGIC, &converted_tiles);
+	// read palettes
+	std::ifstream source_palette_file(data_path(Converter::PALETTE_CHUNK_FILE));
+	read_chunk(source_palette_file, Converter::PALETTE_MAGIC, &converted_palettes);
+	// read asset infos
+	std::ifstream source_asset_info_file(data_path(Converter::ASSET_INFO_CHUNK_FILE));
+	read_asset_info_chunk(source_asset_info_file, &asset_infos);
+	
+	assert(converted_tiles.size() <= ppu.tile_table.size());
+	assert(converted_palettes.size() <= ppu.palette_table.size());
+
+	for (uint32_t i = 0; i < converted_tiles.size(); i++) {
+		ppu.tile_table[i] = converted_tiles[i];
+	}
+	for (uint32_t i = 0; i < converted_palettes.size(); i++) {
+		ppu.palette_table[i] = converted_palettes[i];
+	}
 	//TODO:
 	// you *must* use an asset pipeline of some sort to generate tiles.
 	// don't hardcode them like this!

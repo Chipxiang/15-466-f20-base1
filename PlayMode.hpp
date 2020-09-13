@@ -1,6 +1,6 @@
 #include "PPU466.hpp"
 #include "Mode.hpp"
-
+#include "asset_converter.hpp"
 #include <glm/glm.hpp>
 
 #include <vector>
@@ -14,6 +14,16 @@ struct PlayMode : Mode {
 	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
+
+	// assets
+
+	// tile
+	std::vector<PPU466::Tile> converted_tiles{};
+	// palette
+	std::vector<PPU466::Palette> converted_palettes{};
+	// read asset info
+	std::vector<AssetInfo> asset_infos{};
+
 
 	//----- game state -----
 
