@@ -14,26 +14,7 @@
  * 3 chunk files:
  *    (1) for all tile data
  *    (2) for all palette data
- *    (3) for all character info data (placement of tile, mapping from tile to palette)
- */
-
-
-
-
-/**
- * Asset file name (with .png extension)
- *
- */
-
-/**
- * asset type table
- * 0: main character-stand
- * 1: main character-crouch
- * 2: main character-jump
- * 3: main character-dead
- * 4: fire
- * 5: platform
- * 6: killer
+ *    (3) for all character info data (placement of tile, palette, width, height, etc)
  */
 
 namespace Converter {

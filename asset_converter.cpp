@@ -47,17 +47,13 @@ typedef uintmax_t ssize_t;  /* last resort, chux suggestion */
 /* Hard code the order of assets we read */
 static const std::vector<std::string> asset_names = {
     // order is important! The coressponding png file is assets_names[i] + ".png"
-    "mario",
-    "brick"
-//    "color4_large",
-//    "color1_large"
-//    "main_char_stand",
-//    "main_char_crouch",
-//    "main_char_jump",
-//    "main_char_dead",
-//    "fire",
-//    "platform",
-//    "killer"
+    "char_stand",
+    "char_crouch",
+    "char_jump",
+    "char_dead",
+    "fire",
+    "brick",
+    "killer"
 };
 
 // 8*8 tile in pixel
@@ -159,8 +155,8 @@ PPU466::Palette get_palette(const std::vector<glm::u8vec4>& data) {
     colors.push_back(glm::u8vec4(0, 0, 0, 0));
     for(auto& color: data) {
         if(std::find(colors.begin(), colors.end(), color) == colors.end()) {
-            assert(colors.size() <= PALETTE_SIZE); // at most 4 different color color
             colors.push_back(color);
+            assert(colors.size() <= PALETTE_SIZE); // at most 4 different color color
         }
     }
 
