@@ -69,7 +69,10 @@ struct StoredAssetInfo {
     uint32_t height;
 };
 
+// used for game to read chunk
 void read_asset_info_chunk(std::istream & from, std::vector<AssetInfo> * infos_p);
 
+// used for converter_runner to parse .png and convert to chunk
+void parse(const std::string& png_dir_name);
 
 #endif //INC_15_466_F20_BASE1_ASSET_CONVERTER_H

@@ -5,7 +5,7 @@ dist/game.pdb
 dist/SDL2.dll
 dist/game
 dist/game.exe
-/dist/asset_converter
 *.exe
 *.ilk
 *.pdb
+/dist/converter_runner

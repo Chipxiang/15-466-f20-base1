@@ -267,7 +267,7 @@ ssize_t search_palette(const PPU466::Palette target_palette) {
     return -1;
 }
 
-void parse(const std::string& png_dir_name) {
+void parse_pngs(const std::string& png_dir_name) {
     for(auto& asset_name: asset_names) {
 #if defined(_WIN32)
         std::string png_path = png_dir_name + "\\" + asset_name + ".png";
@@ -360,13 +360,8 @@ void read_asset_info_chunk(std::istream & from, std::vector<AssetInfo> * infos_p
 }
 
 
-int main(int argc, char**argv) {
-    if(argc != 2) {
-        std::cout<<"Provide <path-to-png-directory> as the first argument"<<std::endl;
-        return 0;
-    }
-
-    parse(argv[1]);
+void parse(const std::string& png_dir_name) {
+    parse_pngs(png_dir_name);
 
     // write tile chunk
     std::ofstream tile_file(data_path(Converter::TILE_CHUNK_FILE), std::ios::binary);

@@ -95,10 +95,11 @@ CONVERTER_NAMES =
 	asset_converter
 	load_save_png
 	data_path
+	converter_runner
 	;
 
 LOCATE_TARGET = objs ; #put objects in 'objs' directory
 Objects $(CONVERTER_NAMES:S=.cpp) ;
 
 LOCATE_TARGET = dist ; #put main in 'dist' directory
-MainFromObjects asset_converter : $(CONVERTER_NAMES:S=$(SUFOBJ)) ;
+MainFromObjects converter_runner : $(CONVERTER_NAMES:S=$(SUFOBJ)) ;
