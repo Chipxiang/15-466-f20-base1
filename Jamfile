@@ -86,3 +86,16 @@ Objects $(GAME_NAMES:S=.cpp) ;
 
 LOCATE_TARGET = dist ; #put main in 'dist' directory
 MainFromObjects game : $(GAME_NAMES:S=$(SUFOBJ)) ;
+
+#--- build converter executable ---
+
+CONVERTER_NAMES =
+	asset_converter
+	load_save_png
+	;
+
+LOCATE_TARGET = objs ; #put objects in 'objs' directory
+Objects $(CONVERTER_NAMES:S=.cpp) ;
+
+LOCATE_TARGET = dist ; #put main in 'dist' directory
+MainFromObjects asset_converter : $(CONVERTER_NAMES:S=$(SUFOBJ)) ;
