@@ -99,8 +99,8 @@ void debug_reconstruct_png(const AssetInfo& info, const std::string& save_dir, c
 
     //debug reconstruct all asset_name_X.png from the 3 vector
     int cons_idx = 0;
-    for(int i=0; i< rows; i++) {
-        for(int j = 0; j < cols; j++) {
+    for(uint32_t i=0; i< rows; i++) {
+        for(uint32_t j = 0; j < cols; j++) {
             PPU466::Tile tile = tiles[info.tile_indices[j + i * cols]];
             PPU466::Palette palette = palettes[info.palette_index];
             std::vector<glm::u8vec4> data;
@@ -159,7 +159,7 @@ PPU466::Tile get_tile(const std::vector<glm::u8vec4>& data, const PPU466::Palett
         for (int j = 0; j < TILE_WIDTH; j ++) {
             // pixel at (j, i)
             glm::u8vec4 color = data[i * TILE_WIDTH + j];
-            uint8_t idx = std::find(palette.begin(), palette.end(), color) - palette.begin();
+            auto idx = std::find(palette.begin(), palette.end(), color) - palette.begin();
 
             assert(idx < palette.size());
             tile.bit0[i] |= ((idx & 1) << j);
@@ -182,8 +182,8 @@ std::vector<std::vector<glm::u8vec4>> split_png_data(const std::vector<glm::u8ve
     uint32_t rows = height / TILE_HEIGHT;
     std::vector<std::vector<glm::u8vec4>> small_datas;
 
-    for (int i=0; i < rows; i++) {
-        for (int j=0; j < cols; j++) {
+    for (uint32_t i=0; i < rows; i++) {
+        for (uint32_t j=0; j < cols; j++) {
             // the small png at (i, j), read this png's data from low left
             std::vector<glm::u8vec4> small_data(TILE_WIDTH * TILE_HEIGHT);
             for(int m=0; m < TILE_HEIGHT; m++) {
@@ -254,7 +254,7 @@ void parse(const std::string& png_dir_name) {
             //find a new palettes
             palettes.push_back(new_palette);
             assert(palettes.size() <= MAX_TOTAL_PALETTES);
-            pal_idx = palettes.size() - 1;
+            pal_idx = (int) (palettes.size() - 1);
         } else {
             // use existing palette to draw
             new_palette = palettes[pal_idx];
@@ -275,7 +275,7 @@ void parse(const std::string& png_dir_name) {
                 // find a new tile
                 tiles.push_back(new_tile);
                 assert(tiles.size() <= MAX_TOTAL_TILES);
-                tile_idx = tiles.size() - 1;
+                tile_idx = (int)(tiles.size() - 1);
             }
             info.tile_indices.push_back(tile_idx);
         }
@@ -293,9 +293,9 @@ void write_asset_info_chunk(const std::vector<AssetInfo>& infos, std::ostream *t
 
     for (auto const &info : infos) {
         sinfos.emplace_back();
-        sinfos.back().tile_idx_begin = tile_indices.size();
+        sinfos.back().tile_idx_begin = (uint32_t)tile_indices.size();
         tile_indices.insert(tile_indices.end(), info.tile_indices.begin(), info.tile_indices.end());
-        sinfos.back().tile_idx_end = tile_indices.size();
+        sinfos.back().tile_idx_end = (uint32_t)tile_indices.size();
         sinfos.back().palette_index = info.palette_index;
         sinfos.back().width = info.width;
         sinfos.back().height = info.height;
@@ -391,7 +391,7 @@ int main(int argc, char**argv) {
         assert(asset_infos[i].tile_indices == converted_asset_infos[i].tile_indices);
         assert(asset_infos[i].palette_index == converted_asset_infos[i].palette_index);
         assert(asset_infos[i].width == converted_asset_infos[i].width);
-        assert(asset_infos[i].height == converted_asgitset_infos[i].height);
+        assert(asset_infos[i].height == converted_asset_infos[i].height);
     }
     std::cout<<"Asset info check pass!\n";
 }
