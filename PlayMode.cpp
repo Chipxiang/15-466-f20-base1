@@ -127,6 +127,12 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = true;
 			return true;
 		}
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false) {
+			jump.speed += unit_jump_speed;
+			if (jump.speed > max_jump_speed)
+				jump.speed = max_jump_speed;
+			jump.pressed = true;
+		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_LEFT) {
 			left.pressed = false;
@@ -141,6 +147,19 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = false;
 			return true;
 		}
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed < min_jump_speed) {
+			jump.speed = 0;
+			jump.pressed = false;
+			return true;
+		}
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed >= min_jump_speed) {
+			jump.pressed = false;
+			jump.ystart = player_at.y;
+			jump.xstart = player_at.x;
+			jump.time = 0;
+			jump.is_jumping = true;
+			return true;
+		}
 	}
 
 	return false;
@@ -153,12 +172,39 @@ void PlayMode::update(float elapsed) {
 	background_fade += elapsed / 10.0f;
 	background_fade -= std::floor(background_fade);
 
-	constexpr float PlayerSpeed = 30.0f;
+	constexpr float PlayerSpeed = 10.0f;
 	if (left.pressed) player_at.x -= PlayerSpeed * elapsed;
 	if (right.pressed) player_at.x += PlayerSpeed * elapsed;
 	if (down.pressed) player_at.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player_at.y += PlayerSpeed * elapsed;
 
+	if (jump.speed > 0 && !jump.pressed) {
+		jump.time += elapsed * 10;
+		float temp_y = jump.ystart + jump.speed * jump.time - gravity_constant * jump.time * jump.time;
+		player_at.x = jump.xstart + jump.speed / 2 * jump.time;
+		// death
+		if (temp_y < 0) {
+			temp_y = 0;
+			jump.is_jumping = false;
+			jump.speed = 0.0f;
+			std::cout << player_at.x << "," << temp_y << std::endl;
+		}
+		// platform
+		for (uint32_t i = 1; i < 64; i++)
+		{
+			if (ppu.sprites[i].y < 240 && player_at.x > ppu.sprites[i].x - 7 && player_at.x < ppu.sprites[i].x + 7 &&
+				temp_y < ppu.sprites[i].y + 8) {
+				temp_y = ppu.sprites[i].y + 8.0f;
+				jump.is_jumping = false;
+				jump.speed = 0.0f;
+				std::cout << player_at.x << "," << temp_y << std::endl;
+				break;
+			}
+		}
+		player_at.y = temp_y;
+	}
+	if (player_at.x > 256)
+		player_at.x -= 256;
 	//reset button press counters:
 	left.downs = 0;
 	right.downs = 0;
@@ -196,14 +242,35 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	ppu.sprites[0].index = 32;
 	ppu.sprites[0].attributes = 7;
 
+	ppu.sprites[1].x = int32_t(64);
+	ppu.sprites[1].y = int32_t(8);
+	ppu.sprites[1].index = 32;
+	ppu.sprites[1].attributes = 6;
+
+	ppu.sprites[2].x = int32_t(72);
+	ppu.sprites[2].y = int32_t(8);
+	ppu.sprites[2].index = 32;
+	ppu.sprites[2].attributes = 6;
+
+	ppu.sprites[3].x = int32_t(80);
+	ppu.sprites[3].y = int32_t(8);
+	ppu.sprites[3].index = 32;
+	ppu.sprites[3].attributes = 6;
+
+	ppu.sprites[4].x = int32_t(88);
+	ppu.sprites[4].y = int32_t(8);
+	ppu.sprites[4].index = 32;
+	ppu.sprites[4].attributes = 6;
 	//some other misc sprites:
-	for (uint32_t i = 1; i < 63; ++i) {
-		float amt = (i + 2.0f * background_fade) / 62.0f;
+	for (uint32_t i = 5; i < 63; ++i) {
+		ppu.sprites[i].x = 0;
+		ppu.sprites[i].y = 250;
+		/*float amt = (i + 2.0f * background_fade) / 62.0f;
 		ppu.sprites[i].x = int32_t(0.5f * PPU466::ScreenWidth + std::cos( 2.0f * M_PI * amt * 5.0f + 0.01f * player_at.x) * 0.4f * PPU466::ScreenWidth);
-		ppu.sprites[i].y = int32_t(0.5f * PPU466::ScreenHeight + std::sin( 2.0f * M_PI * amt * 3.0f + 0.01f * player_at.y) * 0.4f * PPU466::ScreenWidth);
+		ppu.sprites[i].y = int32_t(0.5f * PPU466::ScreenHeight + std::sin( 2.0f * M_PI * amt * 3.0f + 0.01f * player_at.y) * 0.4f * PPU466::ScreenWidth);*/
 		ppu.sprites[i].index = 32;
 		ppu.sprites[i].attributes = 6;
-		if (i % 2) ppu.sprites[i].attributes |= 0x80; //'behind' bit
+		//ppu.sprites[i].attributes |= 0x80; //'behind' bit
 	}
 
 	//--- actually draw ---

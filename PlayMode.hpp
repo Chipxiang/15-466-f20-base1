@@ -23,11 +23,24 @@ struct PlayMode : Mode {
 		uint8_t pressed = 0;
 	} left, right, down, up;
 
+	static const int max_jump_speed = 30;
+	static const int min_jump_speed = 8;
+	static const int unit_jump_speed = 4;
+	static const int gravity_constant = 5;
+	
+	struct JumpState {
+		uint8_t pressed = 0;
+		float time = 0.0f;
+		float ystart = 0.0f;
+		float xstart = 0.0f;
+		float speed = 0.0f;
+		bool is_jumping = false;
+	} jump;
 	//some weird background animation:
 	float background_fade = 0.0f;
 
 	//player position:
-	glm::vec2 player_at = glm::vec2(0.0f);
+	glm::vec2 player_at = glm::vec2(0.0f, 8.0f);
 
 	//----- drawing handled by PPU466 -----
 
