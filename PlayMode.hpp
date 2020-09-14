@@ -58,8 +58,8 @@ struct PlayMode : Mode {
 	struct Platform {
 		uint32_t width = 32;
 		uint32_t height = 80;
-		uint32_t x = 64;
-		uint32_t y = 0;
+		float x = 64.0f;
+		float y = 0.0f;
 	}plat;
 	std::vector<Platform> platforms = {plat};
 
@@ -71,7 +71,7 @@ struct PlayMode : Mode {
 	glm::vec2 player_at = glm::vec2(0.0f, 8.0f);
 
     // scroll move speed (pix/s)
-    int scroll_move_speed = 10;
+    float scroll_move_speed = 2.0f;
 
 	// since the ppu background is using int, it may round each move to 0, we add a double here
 	// for a more pricise track.

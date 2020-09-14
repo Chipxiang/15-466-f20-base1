@@ -243,23 +243,29 @@ void PlayMode::update(float elapsed) {
 	background_fade += elapsed / 10.0f;
 	background_fade -= std::floor(background_fade);
 
-	constexpr float PlayerSpeed = 10.0f;
+	float scroll_distance = scroll_move_speed * elapsed;
+
+	constexpr float PlayerSpeed = 30.0f;
 	if (left.pressed) player.pos.x -= PlayerSpeed * elapsed;
 	if (right.pressed) player.pos.x += PlayerSpeed * elapsed;
 	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player.pos.y += PlayerSpeed * elapsed;
 
-	if (jump.yspeed > 0 && !jump.pressed) {
+	player.pos.x -= scroll_distance;
+	for (auto& platform : platforms) {
+		platform.x -= scroll_distance;
+	}
+
+	if (jump.is_jumping) {
 		jump.time += elapsed * 10;
 		float temp_y = jump.ystart + jump.yspeed * jump.time - GRAVITY_CONSTANT * jump.time * jump.time;
-		player.pos.x = jump.xstart + jump.xspeed / 2 * jump.time;
+		player.pos.x = jump.xstart + jump.xspeed / 2 * jump.time - scroll_distance;
 		// death
 		if (temp_y < 0) {
 			temp_y = 0;
 			jump.is_jumping = false;
 			jump.yspeed = 0.0f;
 			jump.xspeed = 0.0f;
-			std::cout << player.pos.x << "," << temp_y << std::endl;
 		}
 		// platform
 		for (auto& platform : platforms) {
@@ -273,31 +279,15 @@ void PlayMode::update(float elapsed) {
 					break;
 				}
 				else {
-					jump.is_jumping = false;
 					jump.xspeed = 0.0f;
-					jump.xstart = platform.x - player.size.x;
-					jump.yspeed = 0.1f;
+					jump.xstart = platform.x - player.size.x -1;
+					jump.yspeed = 0.0f;
 					jump.time = 0.0f;
 					jump.ystart = temp_y;
 					break;
 				}
 			}
-				
 		}
-
-		/*for (uint32_t i = (asset_infos[jump.asset_id].width / 8) * (asset_infos[jump.asset_id].height / 8); i < 63; i++)
-		{
-			if (ppu.sprites[i].y < 240 &&
-				player.pos.x > ppu.sprites[i].x - player.size.x && player.pos.x < ppu.sprites[i].x + 8 &&
-				temp_y < ppu.sprites[i].y + 8) {
-				std::cout << i << "," << (int)ppu.sprites[i].y << std::endl;
-				temp_y = ppu.sprites[i].y + 8.0f;
-				jump.is_jumping = false;
-				jump.speed = 0.0f;
-				std::cout << player.pos.x << "," << temp_y << std::endl;
-				break;
-			}
-		}*/
 		player.pos.y = temp_y;
 	}
 	if (player.pos.x > 256)
@@ -309,7 +299,7 @@ void PlayMode::update(float elapsed) {
 	down.downs = 0;
 
 	// background move left at a constant speed
-	background_pos_x -= scroll_move_speed * elapsed;
+	background_pos_x -= scroll_distance;
 	ppu.background_position.x = (uint32_t) background_pos_x;
 }
 
