@@ -209,9 +209,24 @@ void PlayMode::update(float elapsed) {
 	if (right.pressed) player.pos.x += PlayerSpeed * elapsed;
 	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player.pos.y += PlayerSpeed * elapsed;
-
-
-
+	if (!dying &&  player.pos.x > PPU466::ScreenWidth - player.size.x) {
+		jump.is_jumping = true;
+		jump.xstart = player.pos.x;
+		jump.ystart = player.pos.y;
+		jump.xspeed = -10.0f;
+		jump.yspeed = 50.0f;
+		jump.time = 0.0f;
+		dying = true;
+	}
+	else if (!dying && player.pos.x < 0) {
+		jump.is_jumping = true;
+		jump.xstart = player.pos.x;
+		jump.ystart = player.pos.y;
+		jump.xspeed = 10.0f;
+		jump.yspeed = 50.0f;
+		jump.time = 0.0f;
+		dying = true;
+	}
 	if (jump.is_jumping && !dead) {
 		jump.time += elapsed * 10;
 		float temp_y = jump.ystart + jump.yspeed * jump.time - GRAVITY_CONSTANT * jump.time * jump.time;
