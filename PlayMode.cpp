@@ -111,6 +111,20 @@ void PlayMode::update(float elapsed) {
     if(!dying && !dead) {
         score = total_elapsed;
     }
+	if (score > 10 || score <= 20) {
+		min_gap = 5;
+		max_gap = 7;
+		min_width = 5;
+		max_width = 7;
+		scroll_move_speed = 20.0f;
+	}
+	if (score > 20 || score <= 30) {
+		min_gap = 6;
+		max_gap = 8;
+		min_width = 4;
+		max_width = 6;
+		scroll_move_speed = 25.0f;
+	}
     constexpr float PlayerSpeed = 30.0f;
 	if (left.pressed) player.pos.x -= PlayerSpeed * elapsed;
 	if (right.pressed) player.pos.x += PlayerSpeed * elapsed;
