@@ -292,7 +292,26 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
         }
     }
 
-
+	// draw spiked ball
+	uint32_t n_spike_rows = asset_infos[spikedball_id].height / 8;
+	uint32_t n_spike_cols = asset_infos[spikedball_id].width / 8;
+	std::cout << n_spike_cols << std::endl;
+	uint32_t spike_offset = killer_offset;
+	for (uint32_t i = 0; i < PPU466::ScreenHeight / 8; i++) {
+		for (uint32_t j = 0; j < n_spike_cols; j++) {
+			ppu.sprites[spike_offset].x = int32_t(PPU466::ScreenWidth - (n_spike_cols - j) * 8);
+			ppu.sprites[spike_offset].y = int32_t(i * 8);
+			ppu.sprites[spike_offset].index = asset_infos[spikedball_id].tile_indices[n_spike_cols * (i % n_spike_rows) + j];
+			ppu.sprites[spike_offset].attributes = asset_infos[spikedball_id].palette_index;
+			spike_offset++;
+		}
+	}
+	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
+		uint32_t idx = ((PPU466::ScreenWidth - ppu.background_position.x) / 8) - 1 + PPU466::BackgroundWidth * i;
+		if (idx < 0 || idx >= ppu.background.size())
+			continue;
+		ppu.background[(uint32_t)idx] = asset_infos[spikedball_id].tile_indices[i % 2] | (asset_infos[spikedball_id].palette_index << 8);
+	}
     /* Draw background of ppu */
 	// init every background tile to a "transparent" tile
 	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
@@ -325,7 +344,7 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 			}
 		}
 	}
-
+	
 	//--- actually draw ---
 	ppu.draw(drawable_size);
 }
