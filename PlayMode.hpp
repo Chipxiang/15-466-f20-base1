@@ -46,12 +46,13 @@ struct PlayMode : Mode {
 	static const uint32_t MIN_JUMP_SPEED = 8;
 	static const uint32_t UNIT_JUMP_SPEED = 4;
 	static const uint32_t GRAVITY_CONSTANT = 5;
-	static const uint32_t MIN_GAP = 4;
-	static const uint32_t MAX_GAP = 8;
-	static const uint32_t MIN_WIDTH = 3;
-	static const uint32_t MAX_WIDTH = 6;
-	static const uint32_t MIN_HEIGHT = 3;
-	static const uint32_t MAX_HEIGHT = 8;
+	
+	uint32_t min_gap = 4;
+	uint32_t max_gap = 6;
+	uint32_t min_width = 4;
+	uint32_t max_width = 8;
+	uint32_t min_height = 4;
+	uint32_t max_height = 8;
 
 	struct JumpState {
 		uint8_t pressed = 0;

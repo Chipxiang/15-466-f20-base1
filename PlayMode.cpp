@@ -111,7 +111,6 @@ void PlayMode::update(float elapsed) {
     if(!dying && !dead) {
         score = total_elapsed;
     }
-
     constexpr float PlayerSpeed = 30.0f;
 	if (left.pressed) player.pos.x -= PlayerSpeed * elapsed;
 	if (right.pressed) player.pos.x += PlayerSpeed * elapsed;
@@ -206,9 +205,9 @@ void PlayMode::update(float elapsed) {
 	ppu.background_position.x %= (int)PPU466::ScreenWidth;
 
 	if (platforms.back().x + new_gap * 8 <= PPU466::ScreenWidth + 8) {
-		std::uniform_int_distribution<uint32_t> gap_rand(MIN_GAP, MAX_GAP);
-		std::uniform_int_distribution<uint32_t> width_rand(MIN_WIDTH, MAX_WIDTH);
-		std::uniform_int_distribution<uint32_t> height_rand(MIN_HEIGHT, MAX_HEIGHT);
+		std::uniform_int_distribution<uint32_t> gap_rand(min_gap, max_gap);
+		std::uniform_int_distribution<uint32_t> width_rand(min_width, max_width);
+		std::uniform_int_distribution<uint32_t> height_rand(min_height, max_height);
 		platforms.push_back(Platform{ width_rand(mt) * 8, height_rand(mt) * 8, platforms.back().x + platforms.back().width+ new_gap * 8 });
 		new_gap = gap_rand(mt);
 	}
@@ -234,16 +233,12 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 	);
 
 
-	//some other misc sprites:
+	// Initialize all sprites to be out of screen:
 	for (uint32_t i = 0; i < 64; ++i) {
 		ppu.sprites[i].x = 0;
 		ppu.sprites[i].y = 240;
-		/*float amt = (i + 2.0f * background_fade) / 62.0f;
-		ppu.sprites[i].x = int32_t(0.5f * PPU466::ScreenWidth + std::cos( 2.0f * M_PI * amt * 5.0f + 0.01f * player.pos.x) * 0.4f * PPU466::ScreenWidth);
-		ppu.sprites[i].y = int32_t(0.5f * PPU466::ScreenHeight + std::sin( 2.0f * M_PI * amt * 3.0f + 0.01f * player.pos.y) * 0.4f * PPU466::ScreenWidth);*/
 		ppu.sprites[i].index = asset_infos[transparent_id].tile_indices[0];
-		ppu.sprites[i].attributes = 6;
-		//ppu.sprites[i].attributes |= 0x80; //'behind' bit
+		ppu.sprites[i].attributes = asset_infos[transparent_id].palette_index;
 	}
 
 	//player sprite:
