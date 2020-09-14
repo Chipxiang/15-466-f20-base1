@@ -118,7 +118,7 @@ void PlayMode::update(float elapsed) {
 	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player.pos.y += PlayerSpeed * elapsed;
 
-	if (!dying &&  player.pos.x > PPU466::ScreenWidth - player.size.x) {
+	if (!dying &&  player.pos.x > PPU466::ScreenWidth - player.size.x - asset_infos[spikedball_id].width) {
 		jump.is_jumping = true;
 		jump.xstart = player.pos.x;
 		jump.ystart = player.pos.y;
@@ -274,7 +274,7 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 			}
 		}
 	}
-
+	player_offset = asset_infos[player_stand_id].height * asset_infos[player_stand_id].width / 64;
 	// draw killer
     uint32_t n_killer_rows = asset_infos[killer_id].height / 8;
     uint32_t n_killer_cols = asset_infos[killer_id].width / 8;
@@ -287,26 +287,9 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
             ppu.sprites[killer_offset].attributes = asset_infos[killer_id].palette_index;
             killer_offset++;
         }
-    }// draw spiked ball
-	uint32_t n_spike_rows = asset_infos[spikedball_id].height / 8;
-	uint32_t n_spike_cols = asset_infos[spikedball_id].width / 8;
-	std::cout << n_spike_cols << std::endl;
-	uint32_t spike_offset = killer_offset;
-	for (uint32_t i = 0; i < PPU466::ScreenHeight / 8; i++) {
-		for (uint32_t j = 0; j < n_spike_cols; j++) {
-			ppu.sprites[spike_offset].x = int32_t(PPU466::ScreenWidth - (n_spike_cols - j) * 8);
-			ppu.sprites[spike_offset].y = int32_t(i * 8);
-			ppu.sprites[spike_offset].index = asset_infos[spikedball_id].tile_indices[n_spike_cols * (i % n_spike_rows) + j];
-			ppu.sprites[spike_offset].attributes = asset_infos[spikedball_id].palette_index;
-			spike_offset++;
-		}
-	}
-	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
-		uint32_t idx = ((PPU466::ScreenWidth - ppu.background_position.x) / 8) - 1 + PPU466::BackgroundWidth * i;
-		if (idx < 0 || idx >= ppu.background.size())
-			continue;
-		ppu.background[(uint32_t)idx] = asset_infos[spikedball_id].tile_indices[i % 2] | (asset_infos[spikedball_id].palette_index << 8);
-	}
+    }
+	
+
 	//draw score
 	uint32_t display_score = (uint32_t)score > 999 ? 999 : (uint32_t)score;
 	uint8_t units = display_score % 10;
@@ -352,6 +335,24 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 	ppu.sprites[score_offset].index = asset_infos[score_0_id + hundreds].tile_indices[1];
 	ppu.sprites[score_offset].attributes = asset_infos[score_0_id + hundreds].palette_index;
 	score_offset++;
+
+	// draw spiked ball
+	uint32_t n_spike_rows = asset_infos[spikedball_id].height / 8;
+	uint32_t n_spike_cols = asset_infos[spikedball_id].width / 8;
+	uint32_t spike_offset = score_offset;
+	for (uint32_t i = 0; i < PPU466::ScreenHeight / 8; i++) {
+		for (uint32_t j = 0; j < n_spike_cols; j++) {
+			ppu.sprites[spike_offset].x = int32_t(PPU466::ScreenWidth - (n_spike_cols - j) * 8);
+			ppu.sprites[spike_offset].y = int32_t(i * 8);
+			ppu.sprites[spike_offset].index = asset_infos[spikedball_id].tile_indices[n_spike_cols * (i % n_spike_rows) + j];
+			ppu.sprites[spike_offset].attributes = asset_infos[spikedball_id].palette_index;
+			spike_offset++;
+			if (spike_offset == ppu.sprites.size())
+				break;
+		}
+		if (spike_offset == ppu.sprites.size())
+			break;
+	}
     /* Draw background of ppu */
 	// init every background tile to a "transparent" tile
 	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
