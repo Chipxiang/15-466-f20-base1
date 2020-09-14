@@ -95,7 +95,7 @@ struct PlayMode : Mode {
     // total elapsed time
     double total_elapsed = 0.0f;
 
-    // total score = pixels moved in x direction/ 10
+    // total score = elapsed seconds
     double score = 0.0f;
 
     //----- drawing handled by PPU466 -----

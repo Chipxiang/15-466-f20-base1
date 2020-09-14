@@ -108,8 +108,9 @@ void PlayMode::update(float elapsed) {
 	background_fade -= std::floor(background_fade);
     total_elapsed += elapsed;
 
-    // record position before update (used for score calculation)
-    float init_pos_x = player.pos.x;
+    if(!dying && !dead) {
+        score = total_elapsed;
+    }
 
     constexpr float PlayerSpeed = 30.0f;
 	if (left.pressed) player.pos.x -= PlayerSpeed * elapsed;
@@ -221,10 +222,6 @@ void PlayMode::update(float elapsed) {
 		killer_y_position = sin(total_elapsed) * killer_move_magnitude + central_y;
 	}
 	killer_y_position = killer_y_position > asset_infos[fire_id].height ? killer_y_position: asset_infos[fire_id].height;
-
-
-    // update score
-    score +=  (player.pos.x - init_pos_x) / 10.0f;
 }
 
 void PlayMode::draw(glm::uvec2 const& drawable_size) {
@@ -290,9 +287,7 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
             ppu.sprites[killer_offset].attributes = asset_infos[killer_id].palette_index;
             killer_offset++;
         }
-    }
-
-	// draw spiked ball
+    }// draw spiked ball
 	uint32_t n_spike_rows = asset_infos[spikedball_id].height / 8;
 	uint32_t n_spike_cols = asset_infos[spikedball_id].width / 8;
 	std::cout << n_spike_cols << std::endl;
@@ -312,6 +307,51 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 			continue;
 		ppu.background[(uint32_t)idx] = asset_infos[spikedball_id].tile_indices[i % 2] | (asset_infos[spikedball_id].palette_index << 8);
 	}
+	//draw score
+	uint32_t display_score = (uint32_t)score > 999 ? 999 : (uint32_t)score;
+	uint8_t units = display_score % 10;
+	uint8_t tens = ((display_score - units) / 10) % 10;
+	uint8_t hundreds = (display_score - units - tens * 10) / 100;
+
+	uint32_t score_offset = killer_offset;
+	// display units
+	ppu.sprites[score_offset].x = 3 * 8;
+	ppu.sprites[score_offset].y = PPU466::ScreenHeight - 2 * 8;
+	ppu.sprites[score_offset].index = asset_infos[score_0_id + units].tile_indices[0];
+	ppu.sprites[score_offset].attributes = asset_infos[score_0_id + units].palette_index;
+	score_offset++;
+
+	ppu.sprites[score_offset].x = ppu.sprites[score_offset - 1].x;
+	ppu.sprites[score_offset].y = ppu.sprites[score_offset - 1].y + 8;
+	ppu.sprites[score_offset].index = asset_infos[score_0_id + units].tile_indices[1];
+	ppu.sprites[score_offset].attributes = asset_infos[score_0_id + units].palette_index;
+	score_offset++;
+
+	// tens
+	ppu.sprites[score_offset].x = 2 * 8;
+	ppu.sprites[score_offset].y = PPU466::ScreenHeight - 2 * 8;
+	ppu.sprites[score_offset].index = asset_infos[score_0_id + tens].tile_indices[0];
+	ppu.sprites[score_offset].attributes = asset_infos[score_0_id + tens].palette_index;
+	score_offset++;
+
+	ppu.sprites[score_offset].x = ppu.sprites[score_offset - 1].x;
+	ppu.sprites[score_offset].y = ppu.sprites[score_offset - 1].y + 8;
+	ppu.sprites[score_offset].index = asset_infos[score_0_id + tens].tile_indices[1];
+	ppu.sprites[score_offset].attributes = asset_infos[score_0_id + tens].palette_index;
+	score_offset++;
+
+	// hundreds
+	ppu.sprites[score_offset].x = 1 * 8;
+	ppu.sprites[score_offset].y = PPU466::ScreenHeight - 2 * 8;
+	ppu.sprites[score_offset].index = asset_infos[score_0_id + hundreds].tile_indices[0];
+	ppu.sprites[score_offset].attributes = asset_infos[score_0_id + hundreds].palette_index;
+	score_offset++;
+
+	ppu.sprites[score_offset].x = ppu.sprites[score_offset - 1].x;
+	ppu.sprites[score_offset].y = ppu.sprites[score_offset - 1].y + 8;
+	ppu.sprites[score_offset].index = asset_infos[score_0_id + hundreds].tile_indices[1];
+	ppu.sprites[score_offset].attributes = asset_infos[score_0_id + hundreds].palette_index;
+	score_offset++;
     /* Draw background of ppu */
 	// init every background tile to a "transparent" tile
 	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
