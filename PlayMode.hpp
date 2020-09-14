@@ -26,12 +26,11 @@ struct PlayMode : Mode {
 	// read asset info
 	std::vector<AssetInfo> asset_infos{};
 
-
 	//----- game state -----
 	enum AssetIndex
 	{
-		Player_id, Brick_id
-	} asset_idx;
+		player_stand_id, player_crouch_id, player_jump_id, player_dead_id, fire_id, brick_id, killer_id
+	};
 	//input tracking:
 	struct Button {
 		uint8_t downs = 0;

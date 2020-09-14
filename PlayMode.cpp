@@ -9,13 +9,13 @@
 
 PlayMode::PlayMode() {
 	// read tiles
-	std::ifstream source_tile_file(data_path(Converter::TILE_CHUNK_FILE));
+	std::ifstream source_tile_file(data_path(Converter::TILE_CHUNK_FILE), std::ios::binary);
 	read_chunk(source_tile_file, Converter::TILE_MAGIC, &converted_tiles);
 	// read palettes
-	std::ifstream source_palette_file(data_path(Converter::PALETTE_CHUNK_FILE));
+	std::ifstream source_palette_file(data_path(Converter::PALETTE_CHUNK_FILE), std::ios::binary);
 	read_chunk(source_palette_file, Converter::PALETTE_MAGIC, &converted_palettes);
 	// read asset infos
-	std::ifstream source_asset_info_file(data_path(Converter::ASSET_INFO_CHUNK_FILE));
+	std::ifstream source_asset_info_file(data_path(Converter::ASSET_INFO_CHUNK_FILE), std::ios::binary);
 	read_asset_info_chunk(source_asset_info_file, &asset_infos);
 	
 	assert(converted_tiles.size() <= ppu.tile_table.size());
@@ -28,8 +28,8 @@ PlayMode::PlayMode() {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
 
-	player.size.x = asset_infos[Player_id].width;
-	player.size.y = asset_infos[Player_id].height;
+	player.size.x = asset_infos[player_stand_id].width;
+	player.size.y = asset_infos[player_stand_id].height;
 
 	ppu.tile_table[100].bit0 = {
 		0b00000000,
@@ -232,7 +232,7 @@ void PlayMode::update(float elapsed) {
 			std::cout << player.pos.x << "," << temp_y << std::endl;
 		}
 		// platform
-		for (uint32_t i = (asset_infos[Player_id].width / 8) * (asset_infos[Player_id].height / 8); i < 63; i++)
+		for (uint32_t i = (asset_infos[player_stand_id].width / 8) * (asset_infos[player_stand_id].height / 8); i < 63; i++)
 		{			
 			if (ppu.sprites[i].y < 240 && 
 				player.pos.x > ppu.sprites[i].x - player.size.x && player.pos.x < ppu.sprites[i].x + 8 &&
@@ -291,32 +291,37 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 
 	//player sprite:
-	uint32_t nrows = asset_infos[Player_id].height / 8;
-	uint32_t ncols = asset_infos[Player_id].width / 8;
+	uint32_t nrows = asset_infos[player_stand_id].height / 8;
+	uint32_t ncols = asset_infos[player_stand_id].width / 8;
 	uint32_t count = 0;
 	for (uint32_t i = 0; i < nrows; i++) {
 		for (uint32_t j = 0; j < ncols; j++) {
 			ppu.sprites[count].x = int32_t(player.pos.x + j * 8);
 			ppu.sprites[count].y = int32_t(player.pos.y + i * 8);
-			ppu.sprites[count].index = asset_infos[Player_id].tile_indices[count];
-			ppu.sprites[count].attributes = asset_infos[Player_id].palette_index;
+			ppu.sprites[count].index = asset_infos[player_stand_id].tile_indices[count];
+			ppu.sprites[count].attributes = asset_infos[player_stand_id].palette_index;
 			count++;
 		}
 	}	
-	ppu.sprites[8].x = 64;
+	ppu.sprites[8].x = 96;
 	ppu.sprites[8].y = 8;
-	ppu.sprites[8].index = asset_infos[Brick_id].tile_indices[0];
-	ppu.sprites[8].attributes = asset_infos[Brick_id].palette_index;
+	ppu.sprites[8].index = asset_infos[brick_id].tile_indices[0];
+	ppu.sprites[8].attributes = asset_infos[brick_id].palette_index;
 
-	ppu.sprites[9].x = 72;
+	ppu.sprites[9].x = 104;
 	ppu.sprites[9].y = 8;
-	ppu.sprites[9].index = asset_infos[Brick_id].tile_indices[0];
-	ppu.sprites[9].attributes = asset_infos[Brick_id].palette_index;
+	ppu.sprites[9].index = asset_infos[brick_id].tile_indices[0];
+	ppu.sprites[9].attributes = asset_infos[brick_id].palette_index;
 
-	ppu.sprites[10].x = 80;
+	ppu.sprites[10].x = 112;
 	ppu.sprites[10].y = 8;
-	ppu.sprites[10].index = asset_infos[Brick_id].tile_indices[0];
-	ppu.sprites[10].attributes = asset_infos[Brick_id].palette_index;
+	ppu.sprites[10].index = asset_infos[brick_id].tile_indices[0];
+	ppu.sprites[10].attributes = asset_infos[brick_id].palette_index;
+
+	ppu.sprites[11].x = 120;
+	ppu.sprites[11].y = 8;
+	ppu.sprites[11].index = asset_infos[brick_id].tile_indices[0];
+	ppu.sprites[11].attributes = asset_infos[brick_id].palette_index;
 	//--- actually draw ---
 	ppu.draw(drawable_size);
 }

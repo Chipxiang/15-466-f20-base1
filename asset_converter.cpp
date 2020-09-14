@@ -381,17 +381,17 @@ void parse(const std::string& png_dir_name) {
 //    /** sample code of read chunk data
     // read tile
     std::vector<PPU466::Tile> converted_tiles{};
-    std::ifstream source_tile_file(data_path(Converter::TILE_CHUNK_FILE));
+    std::ifstream source_tile_file(data_path(Converter::TILE_CHUNK_FILE), std::ios::binary);
     read_chunk(source_tile_file, Converter::TILE_MAGIC, &converted_tiles);
 
     // read palette
     std::vector<PPU466::Palette> converted_palettes{};
-    std::ifstream source_palette_file(data_path(Converter::PALETTE_CHUNK_FILE));
+    std::ifstream source_palette_file(data_path(Converter::PALETTE_CHUNK_FILE), std::ios::binary);
     read_chunk(source_palette_file, Converter::PALETTE_MAGIC, &converted_palettes);
 
     // read asset info
     std::vector<AssetInfo> converted_asset_infos{};
-    std::ifstream source_asset_info_file(data_path(Converter::ASSET_INFO_CHUNK_FILE));
+    std::ifstream source_asset_info_file(data_path(Converter::ASSET_INFO_CHUNK_FILE), std::ios::binary);
     read_asset_info_chunk(source_asset_info_file, &converted_asset_infos);
 //    **/
 
