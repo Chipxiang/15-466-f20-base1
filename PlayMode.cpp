@@ -4,7 +4,6 @@
 
 //for glm::value_ptr() :
 #include <glm/gtc/type_ptr.hpp>
-
 #include <random>
 
 PlayMode::PlayMode() {
@@ -202,9 +201,10 @@ void PlayMode::update(float elapsed) {
 	// (will be used to set background color)
 	background_fade += elapsed / 10.0f;
 	background_fade -= std::floor(background_fade);
+    total_elapsed += elapsed;
 
 
-	constexpr float PlayerSpeed = 30.0f;
+    constexpr float PlayerSpeed = 30.0f;
 	if (left.pressed) player.pos.x -= PlayerSpeed * elapsed;
 	if (right.pressed) player.pos.x += PlayerSpeed * elapsed;
 	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
@@ -302,6 +302,10 @@ void PlayMode::update(float elapsed) {
 	if (platforms.front().x + platforms.front().width <= 0) {
 		platforms.pop_front();
 	}
+
+	// update killer info make it move up down in a sin wave
+    uint32_t central_y = dead || dying ? asset_infos[fire_id].height : player.pos.y;
+    killer_y_position = sin(total_elapsed) * killer_move_magnitude + central_y;
 }
 
 void PlayMode::draw(glm::uvec2 const& drawable_size) {
@@ -312,19 +316,6 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 		0, 0, 0,
 		0xff
 	);
-
-	//tilemap gets recomputed every frame as some weird plasma thing:
-	//NOTE: don't do this in your game! actually make a map or something :-)
-//	for (uint32_t y = 0; y < PPU466::BackgroundHeight; ++y) {
-//		for (uint32_t x = 0; x < PPU466::BackgroundWidth; ++x) {
-//			//TODO: make weird plasma thing
-//			ppu.background[x + PPU466::BackgroundWidth * y] = 100;
-//		}
-//	}
-
-	//background scroll:
-//	ppu.background_position.x = int32_t(-0.5f * player.pos.x);
-//	ppu.background_position.y = int32_t(-0.5f * player.pos.y);
 
 
 	//some other misc sprites:
@@ -352,23 +343,38 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 	else {
 		jump.asset_id = player_stand_id;
 	}
-	
+
 	uint32_t n_player_rows = asset_infos[jump.asset_id].height / 8;
 	uint32_t n_player_cols = asset_infos[jump.asset_id].width / 8;
-	uint32_t count = 0;
+	uint32_t player_offset = 0;
 	if (!dead) {
 		for (uint32_t i = 0; i < n_player_rows; i++) {
 			for (uint32_t j = 0; j < n_player_cols; j++) {
-				ppu.sprites[count].x = int32_t(player.pos.x + j * 8);
-				ppu.sprites[count].y = int32_t(player.pos.y + i * 8);
-				ppu.sprites[count].index = asset_infos[jump.asset_id].tile_indices[count];
-				ppu.sprites[count].attributes = asset_infos[jump.asset_id].palette_index;
-				count++;
+				ppu.sprites[player_offset].x = int32_t(player.pos.x + j * 8);
+				ppu.sprites[player_offset].y = int32_t(player.pos.y + i * 8);
+				ppu.sprites[player_offset].index = asset_infos[jump.asset_id].tile_indices[player_offset];
+				ppu.sprites[player_offset].attributes = asset_infos[jump.asset_id].palette_index;
+                player_offset++;
 			}
 		}
 	}
-	
-	/* Draw background of ppu */
+
+	// draw killer
+    uint32_t n_killer_rows = asset_infos[killer_id].height / 8;
+    uint32_t n_killer_cols = asset_infos[killer_id].width / 8;
+    uint32_t killer_offset = player_offset;
+    for (uint32_t i = 0; i < n_killer_rows; i++) {
+        for (uint32_t j = 0; j < n_killer_cols; j++) {
+            ppu.sprites[killer_offset].x = int32_t(0 + j * 8);
+            ppu.sprites[killer_offset].y = int32_t(killer_y_position + i * 8);
+            ppu.sprites[killer_offset].index = asset_infos[killer_id].tile_indices[killer_offset - player_offset];
+            ppu.sprites[killer_offset].attributes = asset_infos[killer_id].palette_index;
+            killer_offset++;
+        }
+    }
+
+
+    /* Draw background of ppu */
 	// init every background tile to a "transparent" tile
 	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
 		for (uint32_t j = 0; j < PPU466::BackgroundWidth; j++) {
@@ -400,19 +406,7 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 			}
 		}
 	}
-	/*for (auto& platform : platforms) {
-		uint32_t nrows = platform.height / 8;
-		uint32_t ncols = platform.width / 8;
-		for (uint32_t i = 0; i < nrows; i++) {
-			for (uint32_t j = 0; j < ncols; j++) {
-				ppu.sprites[count].x = int32_t(platform.x + j * 8);
-				ppu.sprites[count].y = int32_t(platform.y + i * 8);
-				ppu.sprites[count].index = asset_infos[brick_id].tile_indices[0];
-				ppu.sprites[count].attributes = asset_infos[brick_id].palette_index;
-				count++;
-			}
-		}
-	}*/
+
 	//--- actually draw ---
 	ppu.draw(drawable_size);
 }

@@ -28,3 +28,5 @@ This game was built with [NEST](NEST.md).
 `source_png/fire.png`: https://opengameart.org/content/fireflame. License: https://creativecommons.org/publicdomain/zero/1.0/
 
 `source_png/brick.png`: modified from https://opengameart.org/content/mini-brick-tiles. License: https://creativecommons.org/publicdomain/zero/1.0/
+
+`source_png/spikedball.png`: modified from https://opengameart.org/content/spiked-ball-0.  License: https://creativecommons.org/publicdomain/zero/1.0/
