@@ -31,7 +31,10 @@ struct PlayMode : Mode {
 	bool dead = false;
 	enum AssetIndex
 	{
-		player_stand_id, player_crouch_id, player_jump_id, player_dead_id, fire_id, brick_id, killer_id, transparent_id
+		player_stand_id, player_crouch_id, player_jump_id, player_dead_id,
+		fire_id, brick_id, killer_id, transparent_id, spikedball_id, score_0_id,
+		score_1_id,score_2_id, score_3_id, score_4_id, score_5_id, score_6_id,
+		score_7_id, score_8_id, score_9_id
 	};
 	//input tracking:
 	struct Button {
@@ -68,6 +71,7 @@ struct PlayMode : Mode {
 		uint32_t height;
 		float x;
 	};
+
 	std::deque<Platform> platforms = { Platform{40, 40, 64.0f},  Platform{40, 40, 160.0f} };
 	uint32_t new_gap = 4;
 
@@ -91,6 +95,8 @@ struct PlayMode : Mode {
     // total elapsed time
     double total_elapsed = 0.0f;
 
+    // total score = pixels moved in x direction/ 10
+    double score = 0.0f;
 
     //----- drawing handled by PPU466 -----
 
