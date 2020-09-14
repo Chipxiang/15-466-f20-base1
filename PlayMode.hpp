@@ -51,7 +51,6 @@ struct PlayMode : Mode {
 	static const uint32_t MAX_HEIGHT = 8;
 
 	struct JumpState {
-		uint32_t asset_id = player_stand_id;
 		uint8_t pressed = 0;
 		float time = 0.0f;
 		float ystart = 0.0f;
@@ -73,6 +72,7 @@ struct PlayMode : Mode {
 
 	//player information:
 	struct PlayerInfo {
+		uint32_t asset_id = player_stand_id;
 		glm::vec2 pos = glm::vec2(64.0f, 40.0f);
 		glm::vec2 size = glm::vec2(8.0f, 8.0f);
 	} player;
@@ -86,7 +86,7 @@ struct PlayMode : Mode {
 
 	// killer info y coordinate
 	double killer_y_position = 0.0f;
-    double killer_move_magnitude = 30.0f;
+    double killer_move_magnitude = 15.0f;
 
     // total elapsed time
     double total_elapsed = 0.0f;

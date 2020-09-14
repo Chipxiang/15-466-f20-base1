@@ -27,8 +27,8 @@ PlayMode::PlayMode() {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
 
-	player.size.x = asset_infos[jump.asset_id].width;
-	player.size.y = asset_infos[jump.asset_id].height;
+	player.size.x = asset_infos[player.asset_id].width;
+	player.size.y = asset_infos[player.asset_id].height;
 
 
 	//TODO:
@@ -305,8 +305,11 @@ void PlayMode::update(float elapsed) {
 	}
 
 	// update killer info make it move up down in a sin wave
-    uint32_t central_y = dead || dying ? (uint32_t)asset_infos[fire_id].height : (uint32_t)player.pos.y;
-    killer_y_position = sin(total_elapsed) * killer_move_magnitude + central_y;
+	if (!dead && !dying) {
+		uint32_t central_y = (uint32_t)player.pos.y;
+		killer_y_position = sin(total_elapsed) * killer_move_magnitude + central_y;
+	}
+	killer_y_position = killer_y_position > asset_infos[fire_id].height ? killer_y_position: asset_infos[fire_id].height;
 }
 
 void PlayMode::draw(glm::uvec2 const& drawable_size) {
@@ -333,28 +336,28 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 
 	//player sprite:
 	if (dying) {
-		jump.asset_id = player_dead_id;
+		player.asset_id = player_dead_id;
 	}
 	else if (jump.is_jumping) {
-		jump.asset_id = player_jump_id;
+		player.asset_id = player_jump_id;
 	}
 	else if (jump.pressed) {
-		jump.asset_id = player_crouch_id;
+		player.asset_id = player_crouch_id;
 	}
 	else {
-		jump.asset_id = player_stand_id;
+		player.asset_id = player_stand_id;
 	}
 
-	uint32_t n_player_rows = asset_infos[jump.asset_id].height / 8;
-	uint32_t n_player_cols = asset_infos[jump.asset_id].width / 8;
+	uint32_t n_player_rows = asset_infos[player.asset_id].height / 8;
+	uint32_t n_player_cols = asset_infos[player.asset_id].width / 8;
 	uint32_t player_offset = 0;
 	if (!dead) {
 		for (uint32_t i = 0; i < n_player_rows; i++) {
 			for (uint32_t j = 0; j < n_player_cols; j++) {
 				ppu.sprites[player_offset].x = int32_t(player.pos.x + j * 8);
 				ppu.sprites[player_offset].y = int32_t(player.pos.y + i * 8);
-				ppu.sprites[player_offset].index = asset_infos[jump.asset_id].tile_indices[player_offset];
-				ppu.sprites[player_offset].attributes = asset_infos[jump.asset_id].palette_index;
+				ppu.sprites[player_offset].index = asset_infos[player.asset_id].tile_indices[player_offset];
+				ppu.sprites[player_offset].attributes = asset_infos[player.asset_id].palette_index;
                 player_offset++;
 			}
 		}
