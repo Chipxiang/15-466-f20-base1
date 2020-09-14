@@ -20,3 +20,11 @@ Sources: (TODO: list a source URL for any assets you did not create yourself. Ma
 
 This game was built with [NEST](NEST.md).
 
+
+## References
+`source_png/char_stand.png`, `source_png/char_crouch.png`, `source_png/char_jump.png`, `source_png/char_dead.png`, 
+`source_png/killer.png`: modified from https://craftpix.net/freebies/free-pixel-art-tiny-hero-sprites/ (license: https://craftpix.net/file-licenses/)
+
+`source_png/fire.png`: https://opengameart.org/content/fireflame. License: https://creativecommons.org/publicdomain/zero/1.0/
+
+`source_png/brick.png`: modified from https://opengameart.org/content/mini-brick-tiles. License: https://creativecommons.org/publicdomain/zero/1.0/
