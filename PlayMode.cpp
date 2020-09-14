@@ -27,8 +27,108 @@ PlayMode::PlayMode() {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
 
+<<<<<<< HEAD
 	player.size.x = asset_infos[jump.asset_id].width;
 	player.size.y = asset_infos[jump.asset_id].height;
+=======
+	player.size.x = asset_infos[player.asset_id].width;
+	player.size.y = asset_infos[player.asset_id].height;
+
+
+	//TODO:
+	// you *must* use an asset pipeline of some sort to generate tiles.
+	// don't hardcode them like this!
+	// or, at least, if you do hardcode them like this,
+	//  make yourself a script that spits out the code that you paste in here
+	//   and check that script into your repository.
+
+	//Also, *don't* use these tiles in your game:
+
+	/*{ //use tiles 0-16 as some weird dot pattern thing:
+		std::array< uint8_t, 8*8 > distance;
+		for (uint32_t y = 0; y < 8; ++y) {
+			for (uint32_t x = 0; x < 8; ++x) {
+				float d = glm::length(glm::vec2((x + 0.5f) - 4.0f, (y + 0.5f) - 4.0f));
+				d /= glm::length(glm::vec2(4.0f, 4.0f));
+				distance[x+8*y] = std::max(0,std::min(255,int32_t( 255.0f * d )));
+			}
+		}
+		for (uint32_t index = 0; index < 16; ++index) {
+			PPU466::Tile tile;
+			uint8_t t = (255 * index) / 16;
+			for (uint32_t y = 0; y < 8; ++y) {
+				uint8_t bit0 = 0;
+				uint8_t bit1 = 0;
+				for (uint32_t x = 0; x < 8; ++x) {
+					uint8_t d = distance[x+8*y];
+					if (d > t) {
+						bit0 |= (1 << x);
+					} else {
+						bit1 |= (1 << x);
+					}
+				}
+				tile.bit0[y] = bit0;
+				tile.bit1[y] = bit1;
+			}
+			ppu.tile_table[index] = tile;
+		}
+	}
+
+	//use sprite 32 as a "player":
+	ppu.tile_table[32].bit0 = {
+		0b01111110,
+		0b11111111,
+		0b11111111,
+		0b11111111,
+		0b11111111,
+		0b11111111,
+		0b11111111,
+		0b01111110,
+	};
+	ppu.tile_table[32].bit1 = {
+		0b00000000,
+		0b00000000,
+		0b00011000,
+		0b00100100,
+		0b00000000,
+		0b00100100,
+		0b00000000,
+		0b00000000,
+	};
+
+	//makes the outside of tiles 0-16 solid:
+	ppu.palette_table[0] = {
+		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
+		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
+		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
+		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
+	};
+
+	//makes the center of tiles 0-16 solid:
+	ppu.palette_table[1] = {
+		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
+		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
+		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
+		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
+	};
+
+	//used for the player:
+	ppu.palette_table[7] = {
+		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
+		glm::u8vec4(0xff, 0xff, 0x00, 0xff),
+		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
+		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
+	};
+
+	//used for the misc other sprites:
+	ppu.palette_table[6] = {
+		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
+		glm::u8vec4(0x88, 0x88, 0xff, 0xff),
+		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
+		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
+	};
+	*/
+>>>>>>> 1b54a6e09131d4dea187c3efcf64a3fd50078b33
 }
 
 PlayMode::~PlayMode() {
@@ -212,8 +312,11 @@ void PlayMode::update(float elapsed) {
 	}
 
 	// update killer info make it move up down in a sin wave
-    uint32_t central_y = dead || dying ? (uint32_t)asset_infos[fire_id].height : (uint32_t)player.pos.y;
-    killer_y_position = sin(total_elapsed) * killer_move_magnitude + central_y;
+	if (!dead && !dying) {
+		uint32_t central_y = (uint32_t)player.pos.y;
+		killer_y_position = sin(total_elapsed) * killer_move_magnitude + central_y;
+	}
+	killer_y_position = killer_y_position > asset_infos[fire_id].height ? killer_y_position: asset_infos[fire_id].height;
 
 
     // update score
@@ -244,28 +347,28 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 
 	//player sprite:
 	if (dying) {
-		jump.asset_id = player_dead_id;
+		player.asset_id = player_dead_id;
 	}
 	else if (jump.is_jumping) {
-		jump.asset_id = player_jump_id;
+		player.asset_id = player_jump_id;
 	}
 	else if (jump.pressed) {
-		jump.asset_id = player_crouch_id;
+		player.asset_id = player_crouch_id;
 	}
 	else {
-		jump.asset_id = player_stand_id;
+		player.asset_id = player_stand_id;
 	}
 
-	uint32_t n_player_rows = asset_infos[jump.asset_id].height / 8;
-	uint32_t n_player_cols = asset_infos[jump.asset_id].width / 8;
+	uint32_t n_player_rows = asset_infos[player.asset_id].height / 8;
+	uint32_t n_player_cols = asset_infos[player.asset_id].width / 8;
 	uint32_t player_offset = 0;
 	if (!dead) {
 		for (uint32_t i = 0; i < n_player_rows; i++) {
 			for (uint32_t j = 0; j < n_player_cols; j++) {
 				ppu.sprites[player_offset].x = int32_t(player.pos.x + j * 8);
 				ppu.sprites[player_offset].y = int32_t(player.pos.y + i * 8);
-				ppu.sprites[player_offset].index = asset_infos[jump.asset_id].tile_indices[player_offset];
-				ppu.sprites[player_offset].attributes = asset_infos[jump.asset_id].palette_index;
+				ppu.sprites[player_offset].index = asset_infos[player.asset_id].tile_indices[player_offset];
+				ppu.sprites[player_offset].attributes = asset_infos[player.asset_id].palette_index;
                 player_offset++;
 			}
 		}
