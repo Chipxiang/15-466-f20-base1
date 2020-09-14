@@ -209,6 +209,7 @@ void PlayMode::update(float elapsed) {
 	if (right.pressed) player.pos.x += PlayerSpeed * elapsed;
 	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player.pos.y += PlayerSpeed * elapsed;
+
 	if (!dying &&  player.pos.x > PPU466::ScreenWidth - player.size.x) {
 		jump.is_jumping = true;
 		jump.xstart = player.pos.x;
@@ -218,7 +219,7 @@ void PlayMode::update(float elapsed) {
 		jump.time = 0.0f;
 		dying = true;
 	}
-	else if (!dying && player.pos.x < 0) {
+	else if (!dying && player.pos.x < asset_infos[killer_id].width) {
 		jump.is_jumping = true;
 		jump.xstart = player.pos.x;
 		jump.ystart = player.pos.y;
@@ -304,7 +305,7 @@ void PlayMode::update(float elapsed) {
 	}
 
 	// update killer info make it move up down in a sin wave
-    uint32_t central_y = dead || dying ? asset_infos[fire_id].height : player.pos.y;
+    uint32_t central_y = dead || dying ? (uint32_t)asset_infos[fire_id].height : (uint32_t)player.pos.y;
     killer_y_position = sin(total_elapsed) * killer_move_magnitude + central_y;
 }
 
