@@ -54,20 +54,20 @@ PlayMode::PlayMode() {
 
     /* Draw background of ppu */
     // init every background tile to a "transparent" tile
-    for(int i=0; i<PPU466::BackgroundHeight; i++) {
-        for(int j=0; j<PPU466::BackgroundWidth; j++) {
+    for(uint32_t i=0; i<PPU466::BackgroundHeight; i++) {
+        for(uint32_t j=0; j<PPU466::BackgroundWidth; j++) {
             // use the transparent tile with palette 0(not important)
             ppu.background[i * PPU466::BackgroundWidth + j] = 255;
         }
     }
 
 	// draw fire
-	for(int i=0; i < PPU466::BackgroundWidth; i++) {
+	for(uint32_t i=0; i < PPU466::BackgroundWidth; i++) {
 	    ppu.background[i] = asset_infos[fire_id].tile_indices[0] |
                 (asset_infos[fire_id].palette_index << 8);
 	}
 
-    for(int i=0; i < PPU466::BackgroundWidth; i++) {
+    for(uint32_t i=0; i < PPU466::BackgroundWidth; i++) {
         ppu.background[PPU466::BackgroundWidth + i] = asset_infos[fire_id].tile_indices[1] |
                             (asset_infos[fire_id].palette_index << 8);
     }
