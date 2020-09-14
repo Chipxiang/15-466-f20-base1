@@ -24,6 +24,7 @@ static const std::vector<std::string> asset_names = {
     "fire",
     "brick",
     "killer",
+    "transparent"
 };
 
 // 8*8 tile in pixel
@@ -216,17 +217,15 @@ ssize_t search_tile(const PPU466::Tile& target_tile) {
  */
 ssize_t search_palette(const PPU466::Palette target_palette) {
     for(size_t i = 0; i < palettes.size(); i++) {
-        // check if target_palette and palettes[i] is the same:
-        bool is_same = true;
+        // check if target_palette is a subset of palettes[i] (or if they are the same)
+        bool is_subset = true;
         for (int j=0; j < PALETTE_SIZE; j++) {
-            // ugly code, since there maybe duplicate (0,0,0,0) in palette
-            if(std::find(target_palette.begin(), target_palette.end(), palettes[i][j]) == target_palette.end() ||
-                std::find(palettes[i].begin(), palettes[i].end(), target_palette[j]) == palettes[i].end()) {
-                is_same = false;
+            if(std::find(palettes[i].begin(), palettes[i].end(), target_palette[j]) == palettes[i].end()) {
+                is_subset = false;
                 break;
             }
         }
-        if(is_same) {
+        if(is_subset) {
             return i;
         }
     }

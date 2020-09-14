@@ -27,32 +27,10 @@ PlayMode::PlayMode() {
 	for (uint32_t i = 0; i < converted_palettes.size(); i++) {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
-	// let the last tile be a transparent tile
-    ppu.tile_table[255].bit0 = {
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-    };
-    ppu.tile_table[255].bit1 = {
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-    };
 
 	player.size.x = asset_infos[jump.asset_id].width;
 	player.size.y = asset_infos[jump.asset_id].height;
 
-    
 
 	//TODO:
 	// you *must* use an asset pipeline of some sort to generate tiles.
