@@ -52,25 +52,7 @@ PlayMode::PlayMode() {
 	player.size.x = asset_infos[jump.asset_id].width;
 	player.size.y = asset_infos[jump.asset_id].height;
 
-    /* Draw background of ppu */
-    // init every background tile to a "transparent" tile
-    for(uint32_t i=0; i<PPU466::BackgroundHeight; i++) {
-        for(uint32_t j=0; j<PPU466::BackgroundWidth; j++) {
-            // use the transparent tile with palette 0(not important)
-            ppu.background[i * PPU466::BackgroundWidth + j] = 255;
-        }
-    }
-
-	// draw fire
-	for(uint32_t i=0; i < PPU466::BackgroundWidth; i++) {
-	    ppu.background[i] = asset_infos[fire_id].tile_indices[0] |
-                (asset_infos[fire_id].palette_index << 8);
-	}
-
-    for(uint32_t i=0; i < PPU466::BackgroundWidth; i++) {
-        ppu.background[PPU466::BackgroundWidth + i] = asset_infos[fire_id].tile_indices[1] |
-                            (asset_infos[fire_id].palette_index << 8);
-    }
+    
 
 	//TODO:
 	// you *must* use an asset pipeline of some sort to generate tiles.
@@ -237,7 +219,7 @@ bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size)
 }
 
 void PlayMode::update(float elapsed) {
-
+	static std::mt19937 mt;
 	//slowly rotates through [0,1):
 	// (will be used to set background color)
 	background_fade += elapsed / 10.0f;
@@ -251,15 +233,12 @@ void PlayMode::update(float elapsed) {
 	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player.pos.y += PlayerSpeed * elapsed;
 
-	player.pos.x -= scroll_distance;
-	for (auto& platform : platforms) {
-		platform.x -= scroll_distance;
-	}
+
 
 	if (jump.is_jumping) {
 		jump.time += elapsed * 10;
 		float temp_y = jump.ystart + jump.yspeed * jump.time - GRAVITY_CONSTANT * jump.time * jump.time;
-		player.pos.x = jump.xstart + jump.xspeed / 2 * jump.time - scroll_distance;
+		player.pos.x = jump.xstart + jump.xspeed / 2 * jump.time;
 		// death
 		if (temp_y < 0) {
 			temp_y = 0;
@@ -270,9 +249,9 @@ void PlayMode::update(float elapsed) {
 		// platform
 		for (auto& platform : platforms) {
 			if (player.pos.x > platform.x - player.size.x && player.pos.x < platform.x + platform.width 
-				&& temp_y < platform.y + platform.height) {
-				if (temp_y > platform.y + platform.height - 3) {
-					temp_y = platform.y + platform.height + 0.0f;
+				&& temp_y < platform.height) {
+				if (temp_y > platform.height - 8) {
+					temp_y = platform.height + 0.0f;
 					jump.is_jumping = false;
 					jump.yspeed = 0.0f;
 					jump.xspeed = 0.0f;
@@ -280,7 +259,7 @@ void PlayMode::update(float elapsed) {
 				}
 				else {
 					jump.xspeed = 0.0f;
-					jump.xstart = platform.x - player.size.x -1;
+					jump.xstart = platform.x - player.size.x - 1;
 					jump.yspeed = 0.0f;
 					jump.time = 0.0f;
 					jump.ystart = temp_y;
@@ -290,8 +269,11 @@ void PlayMode::update(float elapsed) {
 		}
 		player.pos.y = temp_y;
 	}
-	if (player.pos.x > 256)
-		player.pos.x -= 256;
+	for (auto& platform : platforms) {
+		platform.x -= scroll_distance;
+	}
+	player.pos.x -= scroll_distance;
+
 	//reset button press counters:
 	left.downs = 0;
 	right.downs = 0;
@@ -300,7 +282,19 @@ void PlayMode::update(float elapsed) {
 
 	// background move left at a constant speed
 	background_pos_x -= scroll_distance;
-	ppu.background_position.x = (uint32_t) background_pos_x;
+	ppu.background_position.x = (int) background_pos_x;
+	ppu.background_position.x %= (int)PPU466::ScreenWidth;
+
+	if (platforms.back().x + new_gap * 8 <= PPU466::ScreenWidth + 8) {
+		std::uniform_int_distribution<uint32_t> gap_rand(MIN_GAP, MAX_GAP);
+		std::uniform_int_distribution<uint32_t> width_rand(MIN_WIDTH, MAX_WIDTH);
+		std::uniform_int_distribution<uint32_t> height_rand(MIN_HEIGHT, MAX_HEIGHT);
+		platforms.push_back(Platform{ width_rand(mt) * 8, height_rand(mt) * 8, platforms.back().x + platforms.back().width+ new_gap * 8 });
+		new_gap = gap_rand(mt);
+	}
+	if (platforms.front().x + platforms.front().width <= 0) {
+		platforms.pop_front();
+	}
 }
 
 void PlayMode::draw(glm::uvec2 const& drawable_size) {
@@ -360,7 +354,36 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 			count++;
 		}
 	}
+	/* Draw background of ppu */
+	// init every background tile to a "transparent" tile
+	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
+		for (uint32_t j = 0; j < PPU466::BackgroundWidth; j++) {
+			// use the transparent tile with palette 0(not important)
+			ppu.background[i * PPU466::BackgroundWidth + j] = 255;
+		}
+	}
+
+	// draw fire
+	for (uint32_t i = 0; i < PPU466::BackgroundWidth; i++) {
+		ppu.background[i] = asset_infos[fire_id].tile_indices[0] |
+			(asset_infos[fire_id].palette_index << 8);
+	}
+
+	for (uint32_t i = 0; i < PPU466::BackgroundWidth; i++) {
+		ppu.background[PPU466::BackgroundWidth + i] = asset_infos[fire_id].tile_indices[1] |
+			(asset_infos[fire_id].palette_index << 8);
+	}
+	// draw platforms
 	for (auto& platform : platforms) {
+		uint32_t nrows = platform.height / 8;
+		uint32_t ncols = platform.width / 8;
+		for (uint32_t i = 0; i < nrows; i++) {
+			for (uint32_t j = 0; j < ncols; j++) {
+				ppu.background[(uint32_t)((platform.x + j * 8 - ppu.background_position.x) / 8) + 1 + PPU466::BackgroundWidth * i] = asset_infos[brick_id].tile_indices[0] | (asset_infos[brick_id].palette_index << 8);
+			}
+		}
+	}
+	/*for (auto& platform : platforms) {
 		uint32_t nrows = platform.height / 8;
 		uint32_t ncols = platform.width / 8;
 		for (uint32_t i = 0; i < nrows; i++) {
@@ -372,7 +395,7 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 				count++;
 			}
 		}
-	}
+	}*/
 	//--- actually draw ---
 	ppu.draw(drawable_size);
 }
