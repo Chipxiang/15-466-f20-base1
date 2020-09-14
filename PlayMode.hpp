@@ -48,7 +48,8 @@ struct PlayMode : Mode {
 		float time = 0.0f;
 		float ystart = 0.0f;
 		float xstart = 0.0f;
-		float speed = 0.0f;
+		float yspeed = 0.0f;
+		float xspeed = 0.0f;
 		bool is_jumping = false;
 	} jump;
 	//some weird background animation:
@@ -56,7 +57,7 @@ struct PlayMode : Mode {
 
 	struct Platform {
 		uint32_t width = 32;
-		uint32_t height = 16;
+		uint32_t height = 80;
 		uint32_t x = 64;
 		uint32_t y = 0;
 	}plat;

@@ -194,9 +194,9 @@ bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size)
 			return true;
 		}
 		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false) {
-			jump.speed += UNIT_JUMP_SPEED;
-			if (jump.speed > MAX_JUMP_SPEED)
-				jump.speed = MAX_JUMP_SPEED;
+			jump.yspeed += UNIT_JUMP_SPEED;
+			if (jump.yspeed > MAX_JUMP_SPEED)
+				jump.yspeed = MAX_JUMP_SPEED;
 			jump.pressed = true;
 		}
 	}
@@ -217,17 +217,18 @@ bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size)
 			down.pressed = false;
 			return true;
 		}
-		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed < MIN_JUMP_SPEED) {
-			jump.speed = 0;
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.yspeed < MIN_JUMP_SPEED) {
+			jump.yspeed = 0;
 			jump.pressed = false;
 			return true;
 		}
-		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed >= MIN_JUMP_SPEED) {
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.yspeed >= MIN_JUMP_SPEED) {
 			jump.pressed = false;
 			jump.ystart = player.pos.y;
 			jump.xstart = player.pos.x;
 			jump.time = 0;
 			jump.is_jumping = true;
+			jump.xspeed = jump.yspeed;
 			return true;
 		}
 	}
@@ -248,28 +249,42 @@ void PlayMode::update(float elapsed) {
 	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player.pos.y += PlayerSpeed * elapsed;
 
-	if (jump.speed > 0 && !jump.pressed) {
+	if (jump.yspeed > 0 && !jump.pressed) {
 		jump.time += elapsed * 10;
-		float temp_y = jump.ystart + jump.speed * jump.time - GRAVITY_CONSTANT * jump.time * jump.time;
-		player.pos.x = jump.xstart + jump.speed / 2 * jump.time;
+		float temp_y = jump.ystart + jump.yspeed * jump.time - GRAVITY_CONSTANT * jump.time * jump.time;
+		player.pos.x = jump.xstart + jump.xspeed / 2 * jump.time;
 		// death
 		if (temp_y < 0) {
 			temp_y = 0;
 			jump.is_jumping = false;
-			jump.speed = 0.0f;
+			jump.yspeed = 0.0f;
+			jump.xspeed = 0.0f;
 			std::cout << player.pos.x << "," << temp_y << std::endl;
 		}
 		// platform
 		for (auto& platform : platforms) {
-			if (player.pos.x > platform.x - player.size.x && player.pos.x < platform.x + platform.width &&
-				temp_y < platform.y + platform.height) {
-				temp_y = platform.y + platform.height + 0.0f;
-				jump.is_jumping = false;
-				jump.speed = 0.0f;
-				break;
+			if (player.pos.x > platform.x - player.size.x && player.pos.x < platform.x + platform.width 
+				&& temp_y < platform.y + platform.height) {
+				if (temp_y > platform.y + platform.height - 3) {
+					temp_y = platform.y + platform.height + 0.0f;
+					jump.is_jumping = false;
+					jump.yspeed = 0.0f;
+					jump.xspeed = 0.0f;
+					break;
+				}
+				else {
+					jump.is_jumping = false;
+					jump.xspeed = 0.0f;
+					jump.xstart = platform.x - player.size.x;
+					jump.yspeed = 0.1f;
+					jump.time = 0.0f;
+					jump.ystart = temp_y;
+					break;
+				}
 			}
-
+				
 		}
+
 		/*for (uint32_t i = (asset_infos[jump.asset_id].width / 8) * (asset_infos[jump.asset_id].height / 8); i < 63; i++)
 		{
 			if (ppu.sprites[i].y < 240 &&
