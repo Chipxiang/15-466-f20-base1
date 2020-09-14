@@ -83,8 +83,16 @@ struct PlayMode : Mode {
 	// since the ppu background is using int, it may round each move to 0, we add a double here
 	// for a more pricise track.
 	double background_pos_x = 0;
-	
-	//----- drawing handled by PPU466 -----
+
+	// killer info y coordinate
+	double killer_y_position = 0.0f;
+    double killer_move_magnitude = 30.0f;
+
+    // total elapsed time
+    double total_elapsed = 0.0f;
+
+
+    //----- drawing handled by PPU466 -----
 
 	PPU466 ppu;
 };

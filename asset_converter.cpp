@@ -24,7 +24,8 @@ static const std::vector<std::string> asset_names = {
     "fire",
     "brick",
     "killer",
-    "transparent"
+    "transparent",
+    "spikedball"
 };
 
 // 8*8 tile in pixel
