@@ -27,30 +27,51 @@ PlayMode::PlayMode() {
 	for (uint32_t i = 0; i < converted_palettes.size(); i++) {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
+	// let the last tile be a transparent tile
+    ppu.tile_table[255].bit0 = {
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+    };
+    ppu.tile_table[255].bit1 = {
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+            0b00000000,
+    };
 
 	player.size.x = asset_infos[jump.asset_id].width;
 	player.size.y = asset_infos[jump.asset_id].height;
 
-	ppu.tile_table[100].bit0 = {
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-	};
-	ppu.tile_table[100].bit1 = {
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-	};
+    /* Draw background of ppu */
+    // init every background tile to a "transparent" tile
+    for(int i=0; i<PPU466::BackgroundHeight; i++) {
+        for(int j=0; j<PPU466::BackgroundWidth; j++) {
+            // use the transparent tile with palette 0(not important)
+            ppu.background[i * PPU466::BackgroundWidth + j] = 255;
+        }
+    }
+
+	// draw fire
+	for(int i=0; i < PPU466::BackgroundWidth; i++) {
+	    ppu.background[i] = asset_infos[fire_id].tile_indices[0] |
+                (asset_infos[fire_id].palette_index << 8);
+	}
+
+    for(int i=0; i < PPU466::BackgroundWidth; i++) {
+        ppu.background[PPU466::BackgroundWidth + i] = asset_infos[fire_id].tile_indices[1] |
+                            (asset_infos[fire_id].palette_index << 8);
+    }
+
 	//TODO:
 	// you *must* use an asset pipeline of some sort to generate tiles.
 	// don't hardcode them like this!
@@ -271,6 +292,10 @@ void PlayMode::update(float elapsed) {
 	right.downs = 0;
 	up.downs = 0;
 	down.downs = 0;
+
+	// background move left at a constant speed
+	background_pos_x -= scroll_move_speed * elapsed;
+	ppu.background_position.x = (uint32_t) background_pos_x;
 }
 
 void PlayMode::draw(glm::uvec2 const& drawable_size) {
@@ -284,16 +309,17 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 
 	//tilemap gets recomputed every frame as some weird plasma thing:
 	//NOTE: don't do this in your game! actually make a map or something :-)
-	for (uint32_t y = 0; y < PPU466::BackgroundHeight; ++y) {
-		for (uint32_t x = 0; x < PPU466::BackgroundWidth; ++x) {
-			//TODO: make weird plasma thing
-			ppu.background[x + PPU466::BackgroundWidth * y] = 100;
-		}
-	}
+//	for (uint32_t y = 0; y < PPU466::BackgroundHeight; ++y) {
+//		for (uint32_t x = 0; x < PPU466::BackgroundWidth; ++x) {
+//			//TODO: make weird plasma thing
+//			ppu.background[x + PPU466::BackgroundWidth * y] = 100;
+//		}
+//	}
 
 	//background scroll:
-	ppu.background_position.x = int32_t(-0.5f * player.pos.x);
-	ppu.background_position.y = int32_t(-0.5f * player.pos.y);
+//	ppu.background_position.x = int32_t(-0.5f * player.pos.x);
+//	ppu.background_position.y = int32_t(-0.5f * player.pos.y);
+
 
 	//some other misc sprites:
 	for (uint32_t i = 0; i < 64; ++i) {

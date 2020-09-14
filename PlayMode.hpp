@@ -68,6 +68,13 @@ struct PlayMode : Mode {
 		glm::vec2 size = glm::vec2(8.0f, 8.0f);
 	} player;
 	glm::vec2 player_at = glm::vec2(0.0f, 8.0f);
+
+    // scroll move speed (pix/s)
+    int scroll_move_speed = 10;
+
+	// since the ppu background is using int, it may round each move to 0, we add a double here
+	// for a more pricise track.
+	double background_pos_x = 0;
 	
 	//----- drawing handled by PPU466 -----
 
