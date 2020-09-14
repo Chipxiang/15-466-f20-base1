@@ -145,17 +145,21 @@ void PlayMode::update(float elapsed) {
 			for (auto& platform : platforms) {
 				if (player.pos.x > platform.x - player.size.x && player.pos.x < platform.x + platform.width
 					&& temp_y < platform.height) {
+					// up
 					if (temp_y > platform.height - 8) {
 						temp_y = platform.height + 0.0f;
 						jump.is_jumping = false;
 						jump.yspeed = 0.0f;
 						jump.xspeed = 0.0f;
 					}
+					// leftside
 					else {
 						jump.xspeed = 0.0f;
 						jump.xstart = platform.x - player.size.x - 1;
 						player.pos.x = jump.xstart;
-						jump.yspeed = 0.0f;
+						jump.yspeed = jump.yspeed - GRAVITY_CONSTANT * jump.time;
+						if (jump.yspeed > 0)
+							jump.yspeed = 0.0f;
 						jump.time = 0.0f;
 						jump.ystart = temp_y;
 					}
