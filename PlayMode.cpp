@@ -196,6 +196,15 @@ void PlayMode::update(float elapsed) {
 			dead = true;
 		}
 		player.pos.y = temp_y;
+		if (player.pos.y > PPU466::ScreenHeight - player.size.y) {
+			jump.xstart = player.pos.x;
+			jump.ystart = player.pos.y = PPU466::ScreenHeight - player.size.y;;
+			jump.xspeed = 0.0f;
+			jump.yspeed = 0.0f;
+			jump.time = 0.0f;
+		}
+			
+
 	}
 	float scroll_distance = scroll_move_speed * elapsed;
 	if (dying) {
