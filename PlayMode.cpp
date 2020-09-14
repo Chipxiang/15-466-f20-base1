@@ -27,27 +27,6 @@ PlayMode::PlayMode() {
 	for (uint32_t i = 0; i < converted_palettes.size(); i++) {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
-	// let the last tile be a transparent tile
-    ppu.tile_table[255].bit0 = {
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-    };
-    ppu.tile_table[255].bit1 = {
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-            0b00000000,
-    };
 
 	player.size.x = asset_infos[jump.asset_id].width;
 	player.size.y = asset_infos[jump.asset_id].height;
@@ -56,8 +35,8 @@ PlayMode::PlayMode() {
     // init every background tile to a "transparent" tile
     for(uint32_t i=0; i<PPU466::BackgroundHeight; i++) {
         for(uint32_t j=0; j<PPU466::BackgroundWidth; j++) {
-            // use the transparent tile with palette 0(not important)
-            ppu.background[i * PPU466::BackgroundWidth + j] = 255;
+            // use the transparent tile with palette 0
+            ppu.background[i * PPU466::BackgroundWidth + j] = asset_infos[transparent_id].tile_indices[0];
         }
     }
 
