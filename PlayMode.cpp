@@ -384,7 +384,10 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 		uint32_t ncols = platform.width / 8;
 		for (uint32_t i = 0; i < nrows; i++) {
 			for (uint32_t j = 0; j < ncols; j++) {
-				ppu.background[(uint32_t)((platform.x + j * 8 - ppu.background_position.x) / 8) + 1 + PPU466::BackgroundWidth * i] = asset_infos[brick_id].tile_indices[0] | (asset_infos[brick_id].palette_index << 8);
+				float idx = ((platform.x + j * 8 - ppu.background_position.x) / 8) + 1 + PPU466::BackgroundWidth * i;
+				if (idx < 0 || idx >= ppu.background.size())
+					continue;
+				ppu.background[(uint32_t) idx] = asset_infos[brick_id].tile_indices[0] | (asset_infos[brick_id].palette_index << 8);
 			}
 		}
 	}
