@@ -26,24 +26,24 @@ struct PlayMode : Mode {
 	// read asset info
 	std::vector<AssetInfo> asset_infos{};
 
-
 	//----- game state -----
 	enum AssetIndex
 	{
-		Player_id, Brick_id
-	} asset_idx;
+		player_stand_id, player_crouch_id, player_jump_id, player_dead_id, fire_id, brick_id, killer_id
+	};
 	//input tracking:
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
 	} left, right, down, up;
 
-	static const int max_jump_speed = 40;
-	static const int min_jump_speed = 8;
-	static const int unit_jump_speed = 4;
-	static const int gravity_constant = 5;
+	static const int MAX_JUMP_SPEED = 40;
+	static const int MIN_JUMP_SPEED = 8;
+	static const int UNIT_JUMP_SPEED = 4;
+	static const int GRAVITY_CONSTANT = 5;
 	
 	struct JumpState {
+		uint32_t asset_id = player_stand_id;
 		uint8_t pressed = 0;
 		float time = 0.0f;
 		float ystart = 0.0f;
@@ -53,6 +53,14 @@ struct PlayMode : Mode {
 	} jump;
 	//some weird background animation:
 	float background_fade = 0.0f;
+
+	struct Platform {
+		uint32_t width = 32;
+		uint32_t height = 16;
+		uint32_t x = 64;
+		uint32_t y = 0;
+	}plat;
+	std::vector<Platform> platforms = {plat};
 
 	//player information:
 	struct PlayerInfo {

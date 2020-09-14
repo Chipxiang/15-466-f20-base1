@@ -9,15 +9,15 @@
 
 PlayMode::PlayMode() {
 	// read tiles
-	std::ifstream source_tile_file(data_path(Converter::TILE_CHUNK_FILE));
+	std::ifstream source_tile_file(data_path(Converter::TILE_CHUNK_FILE), std::ios::binary);
 	read_chunk(source_tile_file, Converter::TILE_MAGIC, &converted_tiles);
 	// read palettes
-	std::ifstream source_palette_file(data_path(Converter::PALETTE_CHUNK_FILE));
+	std::ifstream source_palette_file(data_path(Converter::PALETTE_CHUNK_FILE), std::ios::binary);
 	read_chunk(source_palette_file, Converter::PALETTE_MAGIC, &converted_palettes);
 	// read asset infos
-	std::ifstream source_asset_info_file(data_path(Converter::ASSET_INFO_CHUNK_FILE));
+	std::ifstream source_asset_info_file(data_path(Converter::ASSET_INFO_CHUNK_FILE), std::ios::binary);
 	read_asset_info_chunk(source_asset_info_file, &asset_infos);
-	
+
 	assert(converted_tiles.size() <= ppu.tile_table.size());
 	assert(converted_palettes.size() <= ppu.palette_table.size());
 
@@ -28,8 +28,8 @@ PlayMode::PlayMode() {
 		ppu.palette_table[i] = converted_palettes[i];
 	}
 
-	player.size.x = asset_infos[Player_id].width;
-	player.size.y = asset_infos[Player_id].height;
+	player.size.x = asset_infos[jump.asset_id].width;
+	player.size.y = asset_infos[jump.asset_id].height;
 
 	ppu.tile_table[100].bit0 = {
 		0b00000000,
@@ -149,52 +149,59 @@ PlayMode::PlayMode() {
 PlayMode::~PlayMode() {
 }
 
-bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
+bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size) {
 
 	if (evt.type == SDL_KEYDOWN) {
 		if (evt.key.keysym.sym == SDLK_LEFT) {
 			left.downs += 1;
 			left.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_RIGHT) {
+		}
+		else if (evt.key.keysym.sym == SDLK_RIGHT) {
 			right.downs += 1;
 			right.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_UP) {
+		}
+		else if (evt.key.keysym.sym == SDLK_UP) {
 			up.downs += 1;
 			up.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_DOWN) {
+		}
+		else if (evt.key.keysym.sym == SDLK_DOWN) {
 			down.downs += 1;
 			down.pressed = true;
 			return true;
 		}
 		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false) {
-			jump.speed += unit_jump_speed;
-			if (jump.speed > max_jump_speed)
-				jump.speed = max_jump_speed;
+			jump.speed += UNIT_JUMP_SPEED;
+			if (jump.speed > MAX_JUMP_SPEED)
+				jump.speed = MAX_JUMP_SPEED;
 			jump.pressed = true;
 		}
-	} else if (evt.type == SDL_KEYUP) {
+	}
+	else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_LEFT) {
 			left.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_RIGHT) {
+		}
+		else if (evt.key.keysym.sym == SDLK_RIGHT) {
 			right.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_UP) {
+		}
+		else if (evt.key.keysym.sym == SDLK_UP) {
 			up.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_DOWN) {
+		}
+		else if (evt.key.keysym.sym == SDLK_DOWN) {
 			down.pressed = false;
 			return true;
 		}
-		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed < min_jump_speed) {
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed < MIN_JUMP_SPEED) {
 			jump.speed = 0;
 			jump.pressed = false;
 			return true;
 		}
-		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed >= min_jump_speed) {
+		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.speed >= MIN_JUMP_SPEED) {
 			jump.pressed = false;
 			jump.ystart = player.pos.y;
 			jump.xstart = player.pos.x;
@@ -222,7 +229,7 @@ void PlayMode::update(float elapsed) {
 
 	if (jump.speed > 0 && !jump.pressed) {
 		jump.time += elapsed * 10;
-		float temp_y = jump.ystart + jump.speed * jump.time - gravity_constant * jump.time * jump.time;
+		float temp_y = jump.ystart + jump.speed * jump.time - GRAVITY_CONSTANT * jump.time * jump.time;
 		player.pos.x = jump.xstart + jump.speed / 2 * jump.time;
 		// death
 		if (temp_y < 0) {
@@ -232,19 +239,29 @@ void PlayMode::update(float elapsed) {
 			std::cout << player.pos.x << "," << temp_y << std::endl;
 		}
 		// platform
-		for (uint32_t i = (asset_infos[Player_id].width / 8) * (asset_infos[Player_id].height / 8); i < 63; i++)
-		{			
-			if (ppu.sprites[i].y < 240 && 
+		for (auto& platform : platforms) {
+			if (player.pos.x > platform.x - player.size.x && player.pos.x < platform.x + platform.width &&
+				temp_y < platform.y + platform.height) {
+				temp_y = platform.y + platform.height + 0.0f;
+				jump.is_jumping = false;
+				jump.speed = 0.0f;
+				break;
+			}
+
+		}
+		/*for (uint32_t i = (asset_infos[jump.asset_id].width / 8) * (asset_infos[jump.asset_id].height / 8); i < 63; i++)
+		{
+			if (ppu.sprites[i].y < 240 &&
 				player.pos.x > ppu.sprites[i].x - player.size.x && player.pos.x < ppu.sprites[i].x + 8 &&
 				temp_y < ppu.sprites[i].y + 8) {
-				std::cout << i << "," << (int) ppu.sprites[i].y << std::endl;
+				std::cout << i << "," << (int)ppu.sprites[i].y << std::endl;
 				temp_y = ppu.sprites[i].y + 8.0f;
 				jump.is_jumping = false;
 				jump.speed = 0.0f;
 				std::cout << player.pos.x << "," << temp_y << std::endl;
 				break;
 			}
-		}
+		}*/
 		player.pos.y = temp_y;
 	}
 	if (player.pos.x > 256)
@@ -256,12 +273,12 @@ void PlayMode::update(float elapsed) {
 	down.downs = 0;
 }
 
-void PlayMode::draw(glm::uvec2 const &drawable_size) {
+void PlayMode::draw(glm::uvec2 const& drawable_size) {
 	//--- set ppu state based on game state ---
 
 	//background color will be some hsv-like fade:
 	ppu.background_color = glm::u8vec4(
-		0,0,0,
+		0, 0, 0,
 		0xff
 	);
 
@@ -270,7 +287,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	for (uint32_t y = 0; y < PPU466::BackgroundHeight; ++y) {
 		for (uint32_t x = 0; x < PPU466::BackgroundWidth; ++x) {
 			//TODO: make weird plasma thing
-			ppu.background[x+PPU466::BackgroundWidth*y] = 100;
+			ppu.background[x + PPU466::BackgroundWidth * y] = 100;
 		}
 	}
 
@@ -291,32 +308,40 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 
 	//player sprite:
-	uint32_t nrows = asset_infos[Player_id].height / 8;
-	uint32_t ncols = asset_infos[Player_id].width / 8;
+	if (jump.is_jumping) {
+		jump.asset_id = player_jump_id;
+	}
+	else if (jump.pressed) {
+		jump.asset_id = player_crouch_id;
+	}
+	else {
+		jump.asset_id = player_stand_id;
+	}
+	uint32_t n_player_rows = asset_infos[jump.asset_id].height / 8;
+	uint32_t n_player_cols = asset_infos[jump.asset_id].width / 8;
 	uint32_t count = 0;
-	for (uint32_t i = 0; i < nrows; i++) {
-		for (uint32_t j = 0; j < ncols; j++) {
+	for (uint32_t i = 0; i < n_player_rows; i++) {
+		for (uint32_t j = 0; j < n_player_cols; j++) {
 			ppu.sprites[count].x = int32_t(player.pos.x + j * 8);
 			ppu.sprites[count].y = int32_t(player.pos.y + i * 8);
-			ppu.sprites[count].index = asset_infos[Player_id].tile_indices[count];
-			ppu.sprites[count].attributes = asset_infos[Player_id].palette_index;
+			ppu.sprites[count].index = asset_infos[jump.asset_id].tile_indices[count];
+			ppu.sprites[count].attributes = asset_infos[jump.asset_id].palette_index;
 			count++;
 		}
-	}	
-	ppu.sprites[8].x = 64;
-	ppu.sprites[8].y = 8;
-	ppu.sprites[8].index = asset_infos[Brick_id].tile_indices[0];
-	ppu.sprites[8].attributes = asset_infos[Brick_id].palette_index;
-
-	ppu.sprites[9].x = 72;
-	ppu.sprites[9].y = 8;
-	ppu.sprites[9].index = asset_infos[Brick_id].tile_indices[0];
-	ppu.sprites[9].attributes = asset_infos[Brick_id].palette_index;
-
-	ppu.sprites[10].x = 80;
-	ppu.sprites[10].y = 8;
-	ppu.sprites[10].index = asset_infos[Brick_id].tile_indices[0];
-	ppu.sprites[10].attributes = asset_infos[Brick_id].palette_index;
+	}
+	for (auto& platform : platforms) {
+		uint32_t nrows = platform.height / 8;
+		uint32_t ncols = platform.width / 8;
+		for (uint32_t i = 0; i < nrows; i++) {
+			for (uint32_t j = 0; j < ncols; j++) {
+				ppu.sprites[count].x = int32_t(platform.x + j * 8);
+				ppu.sprites[count].y = int32_t(platform.y + i * 8);
+				ppu.sprites[count].index = asset_infos[brick_id].tile_indices[0];
+				ppu.sprites[count].attributes = asset_infos[brick_id].palette_index;
+				count++;
+			}
+		}
+	}
 	//--- actually draw ---
 	ppu.draw(drawable_size);
 }
