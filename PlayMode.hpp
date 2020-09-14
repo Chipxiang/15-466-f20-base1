@@ -45,7 +45,7 @@ struct PlayMode : Mode {
 	static const uint32_t GRAVITY_CONSTANT = 5;
 	static const uint32_t MIN_GAP = 4;
 	static const uint32_t MAX_GAP = 8;
-	static const uint32_t MIN_WIDTH = 1;
+	static const uint32_t MIN_WIDTH = 3;
 	static const uint32_t MAX_WIDTH = 6;
 	static const uint32_t MIN_HEIGHT = 3;
 	static const uint32_t MAX_HEIGHT = 8;

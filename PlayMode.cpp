@@ -226,20 +226,19 @@ void PlayMode::update(float elapsed) {
 						jump.is_jumping = false;
 						jump.yspeed = 0.0f;
 						jump.xspeed = 0.0f;
-						break;
 					}
 					else {
 						jump.xspeed = 0.0f;
 						jump.xstart = platform.x - player.size.x - 1;
+						player.pos.x = jump.xstart;
 						jump.yspeed = 0.0f;
 						jump.time = 0.0f;
 						jump.ystart = temp_y;
-						break;
 					}
+					break;
 				}
 			}
 		}
-		
 		// death
 		if (temp_y < 0 && !dying) {
 			jump.xstart = player.pos.x;
@@ -261,10 +260,11 @@ void PlayMode::update(float elapsed) {
 	if (dying) {
 		scroll_distance = 0.0f;
 	}
+	player.pos.x -= scroll_distance;
+	jump.xstart -= scroll_distance;
 	for (auto& platform : platforms) {
 		platform.x -= scroll_distance;
 	}
-	player.pos.x -= scroll_distance;
 
 	//reset button press counters:
 	left.downs = 0;
