@@ -25,7 +25,17 @@ static const std::vector<std::string> asset_names = {
     "brick",
     "killer",
     "transparent",
-    "spikedball"
+    "spikedball",
+    "score_0",
+    "score_1",
+    "score_2",
+    "score_3",
+    "score_4",
+    "score_5",
+    "score_6",
+    "score_7",
+    "score_8",
+    "score_9"
 };
 
 // 8*8 tile in pixel
