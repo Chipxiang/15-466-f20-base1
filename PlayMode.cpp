@@ -203,7 +203,6 @@ void PlayMode::update(float elapsed) {
 	background_fade += elapsed / 10.0f;
 	background_fade -= std::floor(background_fade);
 
-	float scroll_distance = scroll_move_speed * elapsed;
 
 	constexpr float PlayerSpeed = 30.0f;
 	if (left.pressed) player.pos.x -= PlayerSpeed * elapsed;
@@ -213,39 +212,54 @@ void PlayMode::update(float elapsed) {
 
 
 
-	if (jump.is_jumping) {
+	if (jump.is_jumping && !dead) {
 		jump.time += elapsed * 10;
 		float temp_y = jump.ystart + jump.yspeed * jump.time - GRAVITY_CONSTANT * jump.time * jump.time;
 		player.pos.x = jump.xstart + jump.xspeed / 2 * jump.time;
-		// death
-		if (temp_y < 0) {
-			temp_y = 0;
-			jump.is_jumping = false;
-			jump.yspeed = 0.0f;
-			jump.xspeed = 0.0f;
-		}
 		// platform
-		for (auto& platform : platforms) {
-			if (player.pos.x > platform.x - player.size.x && player.pos.x < platform.x + platform.width 
-				&& temp_y < platform.height) {
-				if (temp_y > platform.height - 8) {
-					temp_y = platform.height + 0.0f;
-					jump.is_jumping = false;
-					jump.yspeed = 0.0f;
-					jump.xspeed = 0.0f;
-					break;
-				}
-				else {
-					jump.xspeed = 0.0f;
-					jump.xstart = platform.x - player.size.x - 1;
-					jump.yspeed = 0.0f;
-					jump.time = 0.0f;
-					jump.ystart = temp_y;
-					break;
+		if (!dying) {
+			for (auto& platform : platforms) {
+				if (player.pos.x > platform.x - player.size.x && player.pos.x < platform.x + platform.width
+					&& temp_y < platform.height) {
+					if (temp_y > platform.height - 8) {
+						temp_y = platform.height + 0.0f;
+						jump.is_jumping = false;
+						jump.yspeed = 0.0f;
+						jump.xspeed = 0.0f;
+						break;
+					}
+					else {
+						jump.xspeed = 0.0f;
+						jump.xstart = platform.x - player.size.x - 1;
+						jump.yspeed = 0.0f;
+						jump.time = 0.0f;
+						jump.ystart = temp_y;
+						break;
+					}
 				}
 			}
 		}
+		
+		// death
+		if (temp_y < 0 && !dying) {
+			jump.xstart = player.pos.x;
+			jump.ystart = temp_y;
+			jump.xspeed = 0.0f;
+			jump.yspeed = 50.0f;
+		 	jump.time = 0.0f;
+			dying = true;
+		}
+		else if (temp_y < 0 && dying) {
+			jump.is_jumping = false;
+			jump.yspeed = 0.0f;
+			jump.xspeed = 0.0f;
+			dead = true;
+		}
 		player.pos.y = temp_y;
+	}
+	float scroll_distance = scroll_move_speed * elapsed;
+	if (dying) {
+		scroll_distance = 0.0f;
 	}
 	for (auto& platform : platforms) {
 		platform.x -= scroll_distance;
@@ -305,13 +319,16 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 		/*float amt = (i + 2.0f * background_fade) / 62.0f;
 		ppu.sprites[i].x = int32_t(0.5f * PPU466::ScreenWidth + std::cos( 2.0f * M_PI * amt * 5.0f + 0.01f * player.pos.x) * 0.4f * PPU466::ScreenWidth);
 		ppu.sprites[i].y = int32_t(0.5f * PPU466::ScreenHeight + std::sin( 2.0f * M_PI * amt * 3.0f + 0.01f * player.pos.y) * 0.4f * PPU466::ScreenWidth);*/
-		ppu.sprites[i].index = 32;
+		ppu.sprites[i].index = asset_infos[transparent_id].tile_indices[0];
 		ppu.sprites[i].attributes = 6;
 		//ppu.sprites[i].attributes |= 0x80; //'behind' bit
 	}
 
 	//player sprite:
-	if (jump.is_jumping) {
+	if (dying) {
+		jump.asset_id = player_dead_id;
+	}
+	else if (jump.is_jumping) {
 		jump.asset_id = player_jump_id;
 	}
 	else if (jump.pressed) {
@@ -320,24 +337,28 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 	else {
 		jump.asset_id = player_stand_id;
 	}
+	
 	uint32_t n_player_rows = asset_infos[jump.asset_id].height / 8;
 	uint32_t n_player_cols = asset_infos[jump.asset_id].width / 8;
 	uint32_t count = 0;
-	for (uint32_t i = 0; i < n_player_rows; i++) {
-		for (uint32_t j = 0; j < n_player_cols; j++) {
-			ppu.sprites[count].x = int32_t(player.pos.x + j * 8);
-			ppu.sprites[count].y = int32_t(player.pos.y + i * 8);
-			ppu.sprites[count].index = asset_infos[jump.asset_id].tile_indices[count];
-			ppu.sprites[count].attributes = asset_infos[jump.asset_id].palette_index;
-			count++;
+	if (!dead) {
+		for (uint32_t i = 0; i < n_player_rows; i++) {
+			for (uint32_t j = 0; j < n_player_cols; j++) {
+				ppu.sprites[count].x = int32_t(player.pos.x + j * 8);
+				ppu.sprites[count].y = int32_t(player.pos.y + i * 8);
+				ppu.sprites[count].index = asset_infos[jump.asset_id].tile_indices[count];
+				ppu.sprites[count].attributes = asset_infos[jump.asset_id].palette_index;
+				count++;
+			}
 		}
 	}
+	
 	/* Draw background of ppu */
 	// init every background tile to a "transparent" tile
 	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
 		for (uint32_t j = 0; j < PPU466::BackgroundWidth; j++) {
 			// use the transparent tile with palette 0(not important)
-			ppu.background[i * PPU466::BackgroundWidth + j] = 255;
+			ppu.background[i * PPU466::BackgroundWidth + j] = asset_infos[transparent_id].tile_indices[0];
 		}
 	}
 
