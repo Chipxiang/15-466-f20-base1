@@ -22,6 +22,7 @@ static const std::vector<std::string> asset_names = {
     "char_jump",
     "char_dead",
     "fire",
+    "fire_2",
     "brick",
     "killer",
     "transparent",

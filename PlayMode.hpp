@@ -32,7 +32,7 @@ struct PlayMode : Mode {
 	enum AssetIndex
 	{
 		player_stand_id, player_crouch_id, player_jump_id, player_dead_id,
-		fire_id, brick_id, killer_id, transparent_id, spikedball_id, score_0_id,
+		fire_id, fire_2_id, brick_id, killer_id, transparent_id, spikedball_id, score_0_id,
 		score_1_id,score_2_id, score_3_id, score_4_id, score_5_id, score_6_id,
 		score_7_id, score_8_id, score_9_id
 	};

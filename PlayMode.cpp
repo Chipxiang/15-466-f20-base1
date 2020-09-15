@@ -111,14 +111,14 @@ void PlayMode::update(float elapsed) {
     if(!dying && !dead) {
         score = total_elapsed;
     }
-	if (score > 10 || score <= 20) {
-		min_gap = 5;
-		max_gap = 7;
+
+	if (total_elapsed <= 20) {
+		min_gap = 1;
+		max_gap = 4;
 		min_width = 5;
 		max_width = 7;
 		scroll_move_speed = 20.0f;
-	}
-	if (score > 20 || score <= 30) {
+	} else if (total_elapsed <= 40) {
 		min_gap = 6;
 		max_gap = 8;
 		min_width = 4;
@@ -371,6 +371,7 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 		if (spike_offset == ppu.sprites.size())
 			break;
 	}
+
     /* Draw background of ppu */
 	// init every background tile to a "transparent" tile
 	for (uint32_t i = 0; i < PPU466::BackgroundHeight; i++) {
@@ -381,14 +382,15 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 	}
 
 	// draw fire
+	int fire_flame = total_elapsed - (int)total_elapsed > 0.5 ? fire_id : fire_2_id;
 	for (uint32_t i = 0; i < PPU466::BackgroundWidth; i++) {
-		ppu.background[i] = asset_infos[fire_id].tile_indices[0] |
-			(asset_infos[fire_id].palette_index << 8);
+		ppu.background[i] = asset_infos[fire_flame].tile_indices[0] |
+			(asset_infos[fire_flame].palette_index << 8);
 	}
 
 	for (uint32_t i = 0; i < PPU466::BackgroundWidth; i++) {
-		ppu.background[PPU466::BackgroundWidth + i] = asset_infos[fire_id].tile_indices[1] |
-			(asset_infos[fire_id].palette_index << 8);
+		ppu.background[PPU466::BackgroundWidth + i] = asset_infos[fire_flame].tile_indices[1] |
+			(asset_infos[fire_flame].palette_index << 8);
 	}
 	// draw platforms
 	for (auto& platform : platforms) {
