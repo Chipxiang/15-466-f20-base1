@@ -113,7 +113,7 @@ void PlayMode::update(float elapsed) {
     }
 
 	if (total_elapsed <= 20) {
-		min_gap = 1;
+		min_gap = 3;
 		max_gap = 4;
 		min_width = 5;
 		max_width = 7;

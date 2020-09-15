@@ -78,7 +78,7 @@ struct PlayMode : Mode {
 	//player information:
 	struct PlayerInfo {
 		uint32_t asset_id = player_stand_id;
-		glm::vec2 pos = glm::vec2(80.0f, 40.0f);
+		glm::vec2 pos = glm::vec2(88.0f, 40.0f);
 		glm::vec2 size = glm::vec2(8.0f, 8.0f);
 	} player;
 
