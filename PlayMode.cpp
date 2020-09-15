@@ -44,8 +44,9 @@ PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size) {
-
+	
 	if (evt.type == SDL_KEYDOWN) {
+		/* Player moving control for debug use.
 		if (evt.key.keysym.sym == SDLK_LEFT) {
 			left.downs += 1;
 			left.pressed = true;
@@ -65,8 +66,8 @@ bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size)
 			down.downs += 1;
 			down.pressed = true;
 			return true;
-		}
-		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false) {
+		}*/
+		if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false) {
 			jump.yspeed += UNIT_JUMP_SPEED;
 			if (jump.yspeed > MAX_JUMP_SPEED)
 				jump.yspeed = MAX_JUMP_SPEED;
@@ -74,6 +75,7 @@ bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size)
 		}
 	}
 	else if (evt.type == SDL_KEYUP) {
+		/* Player moving control for debug use.
 		if (evt.key.keysym.sym == SDLK_LEFT) {
 			left.pressed = false;
 			return true;
@@ -89,8 +91,8 @@ bool PlayMode::handle_event(SDL_Event const& evt, glm::uvec2 const& window_size)
 		else if (evt.key.keysym.sym == SDLK_DOWN) {
 			down.pressed = false;
 			return true;
-		}
-		else if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.yspeed < MIN_JUMP_SPEED) {
+		}*/
+		if (evt.key.keysym.sym == SDLK_SPACE && jump.is_jumping == false && jump.yspeed < MIN_JUMP_SPEED) {
 			jump.yspeed = 0;
 			jump.pressed = false;
 			return true;
@@ -134,11 +136,18 @@ void PlayMode::update(float elapsed) {
 		max_width = 6;
 		scroll_move_speed = 25.0f;
 	}
-    constexpr float PlayerSpeed = 30.0f;
+	/* Player moving control for debug use.
+	constexpr float PlayerSpeed = 30.0f;
 	if (left.pressed) player.pos.x -= PlayerSpeed * elapsed;
 	if (right.pressed) player.pos.x += PlayerSpeed * elapsed;
 	if (down.pressed) player.pos.y -= PlayerSpeed * elapsed;
 	if (up.pressed) player.pos.y += PlayerSpeed * elapsed;
+
+	//reset button press counters:
+	left.downs = 0;
+	right.downs = 0;
+	up.downs = 0;
+	down.downs = 0;*/
 
 	if (!dying &&  player.pos.x > PPU466::ScreenWidth - player.size.x - asset_infos[spikedball_id].width) {
 		jump.is_jumping = true;
@@ -225,11 +234,6 @@ void PlayMode::update(float elapsed) {
 		platform.x -= scroll_distance;
 	}
 
-	//reset button press counters:
-	left.downs = 0;
-	right.downs = 0;
-	up.downs = 0;
-	down.downs = 0;
 
 	// background move left at a constant speed
 	background_pos_x -= scroll_distance;
