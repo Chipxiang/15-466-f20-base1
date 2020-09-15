@@ -417,9 +417,10 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 	}
 
 	// draw star
-	for(auto& star: stars_pos) {
+    int star_shift = total_elapsed - (int)total_elapsed > 0.5 ? star_id : star_2_id;
+    for(auto& star: stars_pos) {
 	    ppu.background[star[0] + star[1] * PPU466::BackgroundWidth] =
-	            asset_infos[star_id].tile_indices[0] | (asset_infos[star_id].palette_index << 8);
+	            asset_infos[star_shift].tile_indices[0] | (asset_infos[star_shift].palette_index << 8);
 	}
 	
 	//--- actually draw ---

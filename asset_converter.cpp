@@ -28,6 +28,7 @@ static const std::vector<std::string> asset_names = {
     "transparent",
     "spikedball",
     "star",
+    "star_2",
     "score_0",
     "score_1",
     "score_2",
