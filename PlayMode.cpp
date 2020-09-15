@@ -29,6 +29,15 @@ PlayMode::PlayMode() {
 
 	player.size.x = asset_infos[player.asset_id].width;
 	player.size.y = asset_infos[player.asset_id].height;
+
+
+	// randomly generate star positions
+	int x_cor_gap;
+	for (uint32_t i = 0; i < PPU466::BackgroundWidth; i += x_cor_gap) {
+	     uint32_t y_cor = PPU466::BackgroundHeight / 4 + rand() % (PPU466::BackgroundHeight / 2);
+	     stars_pos.push_back(glm::u32vec2(i, y_cor));
+        x_cor_gap = 5 + rand() % 3;
+	}
 }
 
 PlayMode::~PlayMode() {
@@ -392,6 +401,7 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 		ppu.background[PPU466::BackgroundWidth + i] = asset_infos[fire_flame].tile_indices[1] |
 			(asset_infos[fire_flame].palette_index << 8);
 	}
+
 	// draw platforms
 	for (auto& platform : platforms) {
 		uint32_t nrows = platform.height / 8;
@@ -404,6 +414,12 @@ void PlayMode::draw(glm::uvec2 const& drawable_size) {
 				ppu.background[(uint32_t) idx] = asset_infos[brick_id].tile_indices[0] | (asset_infos[brick_id].palette_index << 8);
 			}
 		}
+	}
+
+	// draw star
+	for(auto& star: stars_pos) {
+	    ppu.background[star[0] + star[1] * PPU466::BackgroundWidth] =
+	            asset_infos[star_id].tile_indices[0] | (asset_infos[star_id].palette_index << 8);
 	}
 	
 	//--- actually draw ---
