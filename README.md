@@ -10,7 +10,12 @@ Screen Shot:
 
 How Your Asset Pipeline Works:
 
-(TODO: describe the steps in your asset pipeline, from source files to tiles/backgrounds/whatever you upload to the PPU466.)
+The assets of this game are all png images. There are three important vectors that we use to save and load the assets. The vector of palettes, vector of tiles, and vector of asset infos.
+
+Png images are loaded and read through in a predefined order. The asset converter first go through all the pixels in the png and put them into a candidate palette. Then it checks with the palette table to find if there is a match, if not, push the palette to the palette table.
+Then the converter converts the png's every 8\*8 block to a tile, and push it to the tile vector. Then we construct a asset info structure to store the corresponding width, height, tile ids and palette id for this specific png for retrieval.
+
+The three vectors are then written into .chunk files by the converter program. And during the game runtime, the three chunks are loaded and tiles are rendered accordingly by applying PPU APIs.
 
 How To Play:
 * Jump from one platform to the other and avoid falling into fire.
